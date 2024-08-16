@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 起動音メーカー</title>
+    <style>
+        /* 基本スタイルは変わりません */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        #app {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-group input[type="range"],
+        .input-group input[type="number"],
+        .input-group select {
+            width: 100%;
+        }
+        #syllableButtons {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Windows 起動音メーカー</h1>
+
+        <div class="input-group">
+            <label for="templateSelect">テンプレートを選択</label>
+            <select id="templateSelect">
+                <option value="vista">Windows Vista</option>
+                <option value="longhorn">Windows Longhorn</option>
+                <option value="win11">Windows 11</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="volumeControl">音量</label>
+            <input type="range" id="volumeControl" min="0" max="100" value="50">
+        </div>
+
+        <div class="input-group">
+            <label for="pitchControl">ピッチ</label>
+            <input type="range" id="pitchControl" min="0.5" max="2" step="0.01" value="1">
+        </div>
+
+        <div class="input-group">
+            <label for="reverbControl">リバーブ</label>
+            <input type="range" id="reverbControl" min="0" max="1" step="0.01" value="0.5">
+        </div>
+
+        <div class="input-group">
+            <label for="frequencyInput">周波数 (Hz)</label>
+            <input type="number" id="frequencyInput" min="20" max="20000" value="440">
+        </div>
+
+        <div class="input-group">
+            <label for="durationInput">持続時間 (秒)</label>
+            <input type="number" id="durationInput" min="0.1" max="10" step="0.1" value="0.5">
+        </div>
+
+        <div class="input-group">
+            <label for="waveTypeSelect">波形タイプ</label>
+            <select id="waveTypeSelect">
+                <option value="sine">サイン波</option>
+                <option value="square">矩形波</option>
+                <option value="triangle">三角波</option>
+                <option value="sawtooth">鋸歯波</option>
+            </select>
+        </div>
+
+        <button id="addSyllableBtn">音節を追加</button>
+
+        <div id="syllableButtons">
+            <!-- 追加された音節のボタンがここに表示されます -->
+        </div>
+
+        <button id="playAllBtn">すべての音節を再生</button>
+        <button id="exportBtn">エクスポート</button>
+    </div>
+
+    <script src="soundmaker.js"></script>
+</body>
+</html>

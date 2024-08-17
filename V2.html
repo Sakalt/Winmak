@@ -16,14 +16,8 @@
     <!-- 音節の作成と管理セクション -->
     <div id="syllable-section">
         <h2>音節</h2>
-        <div id="syllable-list"></div>
+        <select id="syllable-list"></select>
         <button id="add-syllable">音節を追加</button>
-    </div>
-
-    <!-- 音節を選択するためのセレクトボックス -->
-    <div>
-        <label for="syllable-select">編集する音節を選択:</label>
-        <select id="syllable-select"></select>
     </div>
 
     <!-- 音節の編集セクション -->
@@ -48,6 +42,18 @@
         <div>
             <label for="duration">長さ（秒）:</label>
             <input type="number" id="duration" value="1" min="0.1" step="0.1">
+        </div>
+        <div>
+            <label for="pitch">ピッチシフト:</label>
+            <input type="number" id="pitch" value="1" step="0.01" min="0.1" max="5">
+        </div>
+        <div>
+            <label for="fade-in">フェードイン（秒）:</label>
+            <input type="number" id="fade-in" value="0" min="0" step="0.1">
+        </div>
+        <div>
+            <label for="fade-out">フェードアウト（秒）:</label>
+            <input type="number" id="fade-out" value="0" min="0" step="0.1">
         </div>
         <button id="update-syllable">音節を更新</button>
     </div>
@@ -85,7 +91,10 @@
                 waveType: 'sine',
                 frequency: 440,
                 duration: 1,
-                buffer: createWave('sine', 440, 1)
+                pitch: 1,
+                fadeIn: 0,
+                fadeOut: 0,
+                buffer: createWave('sine', 440, 1, 1, 0, 0)
             };
             syllables.push(syllable);
             currentSyllableIndex = syllables.length - 1;
@@ -95,15 +104,15 @@
 
         // 音節のリストを更新する関数
         function updateSyllableList() {
-            const syllableSelect = document.getElementById('syllable-select');
-            syllableSelect.innerHTML = '';
+            const syllableList = document.getElementById('syllable-list');
+            syllableList.innerHTML = '';
             syllables.forEach((syllable, index) => {
                 const option = document.createElement('option');
                 option.value = index;
                 option.textContent = `音節 ${index + 1}`;
-                syllableSelect.appendChild(option);
+                syllableList.appendChild(option);
             });
-            syllableSelect.addEventListener('change', (e) => {
+            syllableList.addEventListener('change', (e) => {
                 currentSyllableIndex = e.target.value;
                 updateSyllableEditor();
             });
@@ -115,6 +124,9 @@
             document.getElementById('wave-type').value = syllable.waveType;
             document.getElementById('frequency').value = syllable.frequency;
             document.getElementById('duration').value = syllable.duration;
+            document.getElementById('pitch').value = syllable.pitch;
+            document.getElementById('fade-in').value = syllable.fadeIn;
+            document.getElementById('fade-out').value = syllable.fadeOut;
         }
 
         // 音節を更新する関数
@@ -123,40 +135,53 @@
             syllable.waveType = document.getElementById('wave-type').value;
             syllable.frequency = parseFloat(document.getElementById('frequency').value);
             syllable.duration = parseFloat(document.getElementById('duration').value);
-            syllable.buffer = createWave(syllable.waveType, syllable.frequency, syllable.duration);
+            syllable.pitch = parseFloat(document.getElementById('pitch').value);
+            syllable.fadeIn = parseFloat(document.getElementById('fade-in').value);
+            syllable.fadeOut = parseFloat(document.getElementById('fade-out').value);
+            syllable.buffer = createWave(
+                syllable.waveType, 
+                syllable.frequency * syllable.pitch, 
+                syllable.duration, 
+                syllable.pitch, 
+                syllable.fadeIn, 
+                syllable.fadeOut
+            );
         });
 
         // カスタム波形の生成関数
-        function createWave(waveType, frequency, duration) {
+        function createWave(waveType, frequency, duration, pitch, fadeIn, fadeOut) {
             const sampleRate = audioContext.sampleRate;
             const length = sampleRate * duration;
             const buffer = audioContext.createBuffer(1, length, sampleRate);
             const data = buffer.getChannelData(0);
             for (let i = 0; i < length; i++) {
                 const time = i / sampleRate;
+                const adjustedFrequency = frequency * pitch;
+                const amplitude = (fadeIn && time < fadeIn) ? time / fadeIn : 
+                                  (fadeOut && time > duration - fadeOut) ? (duration - time) / fadeOut : 1;
                 switch (waveType) {
                     case 'sine':
-                        data[i] = Math.sin(2 * Math.PI * frequency * time);
+                        data[i] = amplitude * Math.sin(2 * Math.PI * adjustedFrequency * time);
                         break;
                     case 'square':
-                        data[i] = Math.sign(Math.sin(2 * Math.PI * frequency * time));
+                        data[i] = amplitude * (Math.sin(2 * Math.PI * adjustedFrequency * time) >= 0 ? 1 : -1);
                         break;
                     case 'triangle':
-                        data[i] = Math.asin(Math.sin(2 * Math.PI * frequency * time)) * (2 / Math.PI);
+                        data[i] = amplitude * Math.asin(Math.sin(2 * Math.PI * adjustedFrequency * time)) * (2 / Math.PI);
                         break;
                     case 'sawtooth':
-                        data[i] = (2 * (i / (sampleRate / frequency)) % 2) - 1;
+                        data[i] = amplitude * (2 * (i / (sampleRate / adjustedFrequency)) % 2 - 1);
                         break;
-                    case 'soboro': // そぼろ波: 低い音でノイズがかかる波形
-                        data[i] = (Math.sin(2 * Math.PI * frequency * time) + 0.5 * (Math.random() * 2 - 1)) * 0.5;
+                    case 'soboro':
+                        data[i] = amplitude * (Math.sin(2 * Math.PI * adjustedFrequency * time) + 0.5 * (Math.random() * 2 - 1)) * 0.5;
                         break;
-                    case 'hito': // 人音: 人の声のような波形
-                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.sin(4 * Math.PI * time);
+                    case 'hito':
+                        data[i] = amplitude * Math.sin(2 * Math.PI * adjustedFrequency * time) * Math.sin(4 * Math.PI * time);
                         break;
-                    case 'choir': // 合唱団: 複数のサイン波が重なった波形
-                        data[i] = 0.3 * Math.sin(2 * Math.PI * frequency * time) +
-                                  0.3 * Math.sin(2 * Math.PI * (frequency + 3) * time) +
-                                  0.3 * Math.sin(2 * Math.PI * (frequency - 3) * time);
+                    case 'choir':
+                        data[i] = amplitude * (0.3 * Math.sin(2 * Math.PI * adjustedFrequency * time) +
+                                              0.3 * Math.sin(2 * Math.PI * (adjustedFrequency + 3) * time) +
+                                              0.3 * Math.sin(2 * Math.PI * (adjustedFrequency - 3) * time));
                         break;
                 }
             }
@@ -196,15 +221,18 @@
             const noiseType = document.getElementById('noise-type').value;
             const noiseBuffer = createNoise(noiseType);
             syllables.push({
-                waveType: noiseType + ' noise',
+                waveType: 'noise',
                 frequency: null,
-                duration: 1,
+                duration: noiseBuffer.duration,
+                pitch: 1,
+                fadeIn: 0,
+                fadeOut: 0,
                 buffer: noiseBuffer
             });
             updateSyllableList();
         });
 
-        // ノイズ生成関数
+        // ノイズの生成関数
         function createNoise(noiseType) {
             const duration = 1;
             const sampleRate = audioContext.sampleRate;
@@ -240,7 +268,7 @@
             if (loadData) {
                 syllables = JSON.parse(loadData);
                 syllables.forEach((syllable, index) => {
-                    syllable.buffer = createWave(syllable.waveType, syllable.frequency, syllable.duration);
+                    syllable.buffer = createWave(syllable.waveType, syllable.frequency, syllable.duration, syllable.pitch, syllable.fadeIn, syllable.fadeOut);
                 });
                 updateSyllableList();
             }

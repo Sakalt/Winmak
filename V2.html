@@ -20,6 +20,12 @@
         <button id="add-syllable">音節を追加</button>
     </div>
 
+    <!-- 音節を選択するためのセレクトボックス -->
+    <div>
+        <label for="syllable-select">編集する音節を選択:</label>
+        <select id="syllable-select"></select>
+    </div>
+
     <!-- 音節の編集セクション -->
     <div id="syllable-editor" class="syllable-controls">
         <h2>音節の編集</h2>
@@ -89,15 +95,15 @@
 
         // 音節のリストを更新する関数
         function updateSyllableList() {
-            const syllableList = document.getElementById('syllable-list');
-            syllableList.innerHTML = '';
+            const syllableSelect = document.getElementById('syllable-select');
+            syllableSelect.innerHTML = '';
             syllables.forEach((syllable, index) => {
                 const option = document.createElement('option');
                 option.value = index;
                 option.textContent = `音節 ${index + 1}`;
-                syllableList.appendChild(option);
+                syllableSelect.appendChild(option);
             });
-            syllableList.addEventListener('change', (e) => {
+            syllableSelect.addEventListener('change', (e) => {
                 currentSyllableIndex = e.target.value;
                 updateSyllableEditor();
             });
@@ -190,15 +196,15 @@
             const noiseType = document.getElementById('noise-type').value;
             const noiseBuffer = createNoise(noiseType);
             syllables.push({
-                waveType: 'noise',
+                waveType: noiseType + ' noise',
                 frequency: null,
-                duration: noiseBuffer.duration,
+                duration: 1,
                 buffer: noiseBuffer
             });
             updateSyllableList();
         });
 
-        // ノイズの生成関数
+        // ノイズ生成関数
         function createNoise(noiseType) {
             const duration = 1;
             const sampleRate = audioContext.sampleRate;

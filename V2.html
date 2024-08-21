@@ -155,7 +155,7 @@
                         data[i] = Math.sign(Math.sin(2 * Math.PI * frequency * time));
                         break;
                     case 'triangle':
-                        data[i] = Math.asin(Math.sin(2 * Math.PI * frequency * time)) * (2 / Math.PI);
+                        data[i] = (2 / Math.PI) * Math.asin(Math.sin(2 * Math.PI * frequency * time));
                         break;
                     case 'sawtooth':
                         data[i] = (2 * (i / (sampleRate / frequency)) % 2) - 1;
@@ -223,7 +223,8 @@
                 if (type === 'white') {
                     data[i] = Math.random() * 2 - 1;
                 } else if (type === 'pink') {
-                    data[i] = (Math.random() * 2 - 1) * (1 - (i / length));
+                    const r = Math.random();
+                    data[i] = r - 0.5;
                 }
             }
             return buffer;
@@ -246,13 +247,11 @@
 
         // 保存ボタンのクリックイベント
         document.getElementById('save').addEventListener('click', () => {
-            // 保存機能の実装が必要
             alert('保存機能はまだ実装されていません。');
         });
 
         // 読み込みボタンのクリックイベント
         document.getElementById('load').addEventListener('click', () => {
-            // 読み込み機能の実装が必要
             alert('読み込み機能はまだ実装されていません。');
         });
 
@@ -282,10 +281,10 @@
             const blockAlign = numChannels * bytesPerSample;
             const byteRate = sampleRate * blockAlign;
             const header = [
-                'RIFF',                    // ChunkID
+                ...stringToBytes('RIFF'),                    // ChunkID
                 ...writeUInt32LE(36 + numFrames * blockAlign), // ChunkSize
-                'WAVE',                    // Format
-                'fmt ',                    // Subchunk1ID
+                ...stringToBytes('WAVE'),                    // Format
+                ...stringToBytes('fmt '),                    // Subchunk1ID
                 ...writeUInt32LE(16),      // Subchunk1Size
                 ...writeUInt16LE(1),       // AudioFormat
                 ...writeUInt16LE(numChannels), // NumChannels
@@ -293,12 +292,17 @@
                 ...writeUInt32LE(byteRate), // ByteRate
                 ...writeUInt16LE(blockAlign), // BlockAlign
                 ...writeUInt16LE(16),      // BitsPerSample
-                'data',                    // Subchunk2ID
+                ...stringToBytes('data'),                    // Subchunk2ID
                 ...writeUInt32LE(numFrames * blockAlign), // Subchunk2Size
                 ...getChannelData(buffer)  // Audio data
             ].flat();
 
             return new Uint8Array(header);
+        }
+
+        // 文字列をバイト配列に変換する関数
+        function stringToBytes(str) {
+            return Array.from(str).map(c => c.charCodeAt(0));
         }
 
         // UInt32リトルエンディアンで書き込む関数

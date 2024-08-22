@@ -33,6 +33,11 @@
                 <option value="soboro">そぼろ波</option>
                 <option value="hito">人音</option>
                 <option value="choir">合唱団</option>
+                <option value="sword">剣振波</option>
+                <option value="win7">win7エラー波</option>
+                <option value="future">未来波</option>
+                <option value="tada">tada波</option>
+                <option value="mac">macOS起動音波</option>
             </select>
         </div>
         <div>
@@ -170,6 +175,24 @@
                         data[i] = 0.3 * Math.sin(2 * Math.PI * frequency * time) +
                                   0.3 * Math.sin(2 * Math.PI * (frequency + 3) * time) +
                                   0.3 * Math.sin(2 * Math.PI * (frequency - 3) * time);
+                        break;
+                    case 'sword': // 剣振波: 刀を振る音
+                        const swordFrequency = frequency * (0.5 + 0.5 * Math.sin(2 * Math.PI * 2 * time));
+                        data[i] = Math.sin(2 * Math.PI * swordFrequency * time);
+                        break;
+                    case 'win7': // win7エラー波: 軽いエラー音
+                        data[i] = Math.sin(2 * Math.PI * frequency * time) * (Math.random() * 0.5 + 0.5);
+                        break;
+                    case 'future': // 未来波: ヘルツが変動する波形
+                        const futureFrequency = frequency + (Math.sin(2 * Math.PI * 0.2 * time) * frequency * 0.1);
+                        data[i] = Math.sin(2 * Math.PI * futureFrequency * time);
+                        break;
+                    case 'tada': // tada波: 喜びの効果音
+                        const tadaFrequency = frequency + (Math.sin(2 * Math.PI * 3 * time) * 10);
+                        data[i] = Math.sin(2 * Math.PI * tadaFrequency * time) * Math.sin(2 * Math.PI * 0.5 * time);
+                        break;
+                    case 'mac': // macOS起動音波: macOSの起動音
+                        data[i] = Math.sin(2 * Math.PI * 440 * time) * (Math.sin(2 * Math.PI * 0.5 * time) * 0.5);
                         break;
                 }
                 // フェードイン

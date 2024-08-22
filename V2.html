@@ -42,6 +42,7 @@
                 <option value="waterphone">ウォーターフォン</option>
                 <option value="win10-error">win10エラー波</option>
                 <option value="win11-error">win11エラー波</option>
+                <option value="echohito">エコー</option>
             </select>
         </div>
         <div>
@@ -179,6 +180,11 @@
                         data[i] = 0.3 * Math.sin(2 * Math.PI * frequency * time) +
                                   0.3 * Math.sin(4 * Math.PI * frequency * time) +
                                   0.3 * Math.sin(6 * Math.PI * frequency * time);
+                        break;
+                    case 'echohito': // 合唱団: 複数のサイン波が重なった波形
+                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.sin(4 * Math.PI * time) +
+                                  Math.sin(4 * Math.PI * frequency * time) * Math.sin(4 * Math.PI * time) +
+                                  Math.sin(6 * Math.PI * frequency * time) * Math.sin(4 * Math.PI * time);
                         break;
                     case 'sword': // 剣振波: 短いノイズ音
                         data[i] = Math.random() * 2 - 1;

@@ -35,7 +35,6 @@
                 <option value="choir">合唱団</option>
                 <option value="sword">剣振波</option>
                 <option value="win7">win7エラー波</option>
-                <option value="future">未来波</option>
                 <option value="tada">tada波</option>
                 <option value="mac">macOS起動音波</option>
             </select>
@@ -174,68 +173,122 @@
                     case 'choir': // 合唱団: 複数のサイン波が重なった波形
                         data[i] = 0.3 * Math.sin(2 * Math.PI * frequency * time) +
                                   0.3 * Math.sin(2 * Math.PI * (frequency + 3) * time) +
-                                  0.3 * Math.sin(2 * Math.PI * (frequency - 3) * time);
+                                  0.3 * Math.sin(2 * Math.PI * (frequency + 6) * time);
                         break;
-                    case 'sword': // 剣振波: 刀を振る音
-                        const swordFrequency = frequency * (0.5 + 0.5 * Math.sin(2 * Math.PI * 2 * time));
-                        data[i] = Math.sin(2 * Math.PI * swordFrequency * time);
+                    case 'sword': // 剣振波: 力強い音の波形
+                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.sin(10 * Math.PI * time);
                         break;
-                    case 'win7': // win7エラー波: 軽いエラー音
-                        data[i] = Math.sin(2 * Math.PI * frequency * time) * (Math.random() * 0.5 + 0.5);
+                    case 'win7': // win7エラー音
+                        data[i] = (i % (sampleRate / 2000)) / (sampleRate / 2000) - 0.5;
                         break;
-                    case 'future': // 未来波: ヘルツが変動する波形
-                        const futureFrequency = frequency + (Math.sin(2 * Math.PI * 0.2 * time) * frequency * 0.1);
-                        data[i] = Math.sin(2 * Math.PI * futureFrequency * time);
+                    case 'tada': // tada波: Windows 3.1起動音
+                        data[i] = Math.sin(2 * Math.PI * frequency * time) * (1 - Math.pow(time / duration, 2));
                         break;
-                    case 'tada': // tada波: 喜びの効果音
-                        const tadaFrequency = frequency + (Math.sin(2 * Math.PI * 3 * time) * 10);
-                        data[i] = Math.sin(2 * Math.PI * tadaFrequency * time) * Math.sin(2 * Math.PI * 0.5 * time);
-                        break;
-                    case 'mac': // macOS起動音波: macOSの起動音
-                        data[i] = Math.sin(2 * Math.PI * 440 * time) * (Math.sin(2 * Math.PI * 0.5 * time) * 0.5);
+                    case 'mac': // macOS起動音波
+                        data[i] = 0.5 * Math.sin(2 * Math.PI * frequency * time) + 
+                                  0.25 * Math.sin(4 * Math.PI * frequency * time);
                         break;
                 }
-                // フェードイン
+                // フェードインとフェードアウト
                 if (i < fadeInEnd) {
                     data[i] *= i / fadeInEnd;
-                }
-                // フェードアウト
-                if (i >= fadeOutStart) {
+                } else if (i > fadeOutStart) {
                     data[i] *= (length - i) / fadeOutLength;
                 }
             }
+
             return buffer;
         }
 
-        // 音節の再生関数
-        function playBuffer(buffer) {
+        // 再生ボタンのイベント
+        document.getElementById('play').addEventListener('click', () => {
+            if (currentSyllableIndex === -1) return;
+            const syllable = syllables[currentSyllableIndex];
             const source = audioContext.createBufferSource();
-            source.buffer = buffer;
+            source.buffer = syllable.buffer;
             source.connect(audioContext.destination);
             source.start();
-        }
-
-        // 再生ボタンのクリックイベント
-        document.getElementById('play').addEventListener('click', () => {
-            if (syllables.length > 0) {
-                const combinedBuffer = combineBuffers(syllables.map(s => s.buffer));
-                playBuffer(combinedBuffer);
-            }
         });
 
-        // 複数のオーディオバッファを結合する関数
-        function combineBuffers(buffers) {
-            const length = buffers.reduce((acc, buffer) => acc + buffer.length, 0);
-            const combinedBuffer = audioContext.createBuffer(1, length, audioContext.sampleRate);
-            let offset = 0;
-            buffers.forEach(buffer => {
-                combinedBuffer.getChannelData(0).set(buffer.getChannelData(0), offset);
-                offset += buffer.length;
-            });
-            return combinedBuffer;
+        // 音声を保存する関数
+        document.getElementById('save').addEventListener('click', () => {
+            if (currentSyllableIndex === -1) return;
+            const syllable = syllables[currentSyllableIndex];
+            const source = audioContext.createBufferSource();
+            source.buffer = syllable.buffer;
+            const wav = bufferToWave(source.buffer);
+            const blob = new Blob([wav], { type: 'audio/wav' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sound.wav';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // WAVデータに変換する関数
+        function bufferToWave(buffer) {
+            const numOfChan = buffer.numberOfChannels,
+                  length = buffer.length * numOfChan * 2 + 44,
+                  bufferView = new DataView(new ArrayBuffer(length)),
+                  channels = [];
+            let sample, offset = 0, pos = 0;
+
+            function writeString(str) {
+                for (let i = 0; i < str.length; i++) {
+                    bufferView.setUint8(offset + i, str.charCodeAt(i));
+                }
+                offset += str.length;
+            }
+
+            writeString('RIFF');
+            bufferView.setUint32(offset, length - 8, true);
+            offset += 4;
+            writeString('WAVE');
+            writeString('fmt ');
+            bufferView.setUint32(offset, 16, true);
+            offset += 4;
+            bufferView.setUint16(offset, 1, true);
+            offset += 2;
+            bufferView.setUint16(offset, numOfChan, true);
+            offset += 2;
+            bufferView.setUint32(offset, buffer.sampleRate, true);
+            offset += 4;
+            bufferView.setUint32(offset, buffer.sampleRate * 2 * numOfChan, true);
+            offset += 4;
+            bufferView.setUint16(offset, numOfChan * 2, true);
+            offset += 2;
+            bufferView.setUint16(offset, 16, true);
+            offset += 2;
+            writeString('data');
+            bufferView.setUint32(offset, length - offset - 8, true);
+            offset += 4;
+
+            for (let i = 0; i < buffer.length; i++) {
+                for (let channel = 0; channel < numOfChan; channel++) {
+                    sample = buffer.getChannelData(channel)[i] * 32767;
+                    sample = Math.max(-32768, Math.min(32767, sample));
+                    bufferView.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+            }
+
+            return bufferView;
         }
 
         // ノイズを追加する関数
+        document.getElementById('add-noise').addEventListener('click', () => {
+            if (currentSyllableIndex === -1) return;
+            const noiseType = document.getElementById('noise-type').value;
+            const syllable = syllables[currentSyllableIndex];
+            const noiseBuffer = createNoise(noiseType, syllable.duration);
+            const source = audioContext.createBufferSource();
+            source.buffer = noiseBuffer;
+            source.connect(audioContext.destination);
+            source.start();
+        });
+
+        // ノイズを生成する関数
         function createNoise(type, duration) {
             const sampleRate = audioContext.sampleRate;
             const length = sampleRate * duration;
@@ -246,115 +299,11 @@
                 if (type === 'white') {
                     data[i] = Math.random() * 2 - 1;
                 } else if (type === 'pink') {
-                    const r = Math.random();
-                    data[i] = r - 0.5;
+                    data[i] = (Math.random() * 2 - 1) * 0.5;
                 }
             }
+
             return buffer;
-        }
-
-        // ノイズ追加ボタンのクリックイベント
-        document.getElementById('add-noise').addEventListener('click', () => {
-            const noiseType = document.getElementById('noise-type').value;
-            const noiseBuffer = createNoise(noiseType, 1);
-            syllables.push({
-                waveType: noiseType,
-                frequency: 0,
-                duration: 1,
-                fadeIn: 0,
-                fadeOut: 0,
-                buffer: noiseBuffer
-            });
-            updateSyllableList();
-        });
-
-        // 保存ボタンのクリックイベント
-        document.getElementById('save').addEventListener('click', () => {
-            alert('保存機能はまだ実装されていません。');
-        });
-
-        // 読み込みボタンのクリックイベント
-        document.getElementById('load').addEventListener('click', () => {
-            alert('読み込み機能はまだ実装されていません。');
-        });
-
-        // エクスポートボタンのクリックイベント
-        document.getElementById('export').addEventListener('click', () => {
-            const combinedBuffer = combineBuffers(syllables.map(s => s.buffer));
-            exportWAV(combinedBuffer);
-        });
-
-        // WAVファイルとしてエクスポートする関数
-        function exportWAV(buffer) {
-            const waveData = encodeWAV(buffer);
-            const blob = new Blob([waveData], { type: 'audio/wav' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'output.wav';
-            link.click();
-        }
-
-        // WAVファイルとしてエンコードする関数
-        function encodeWAV(buffer) {
-            const sampleRate = buffer.sampleRate;
-            const numChannels = buffer.numberOfChannels;
-            const numFrames = buffer.length;
-            const bytesPerSample = 2; // 16-bit PCM
-            const blockAlign = numChannels * bytesPerSample;
-            const byteRate = sampleRate * blockAlign;
-            const header = [
-                ...stringToBytes('RIFF'),                    // ChunkID
-                ...writeUInt32LE(36 + numFrames * blockAlign), // ChunkSize
-                ...stringToBytes('WAVE'),                    // Format
-                ...stringToBytes('fmt '),                    // Subchunk1ID
-                ...writeUInt32LE(16),      // Subchunk1Size
-                ...writeUInt16LE(1),       // AudioFormat
-                ...writeUInt16LE(numChannels), // NumChannels
-                ...writeUInt32LE(sampleRate), // SampleRate
-                ...writeUInt32LE(byteRate), // ByteRate
-                ...writeUInt16LE(blockAlign), // BlockAlign
-                ...writeUInt16LE(16),      // BitsPerSample
-                ...stringToBytes('data'),                    // Subchunk2ID
-                ...writeUInt32LE(numFrames * blockAlign), // Subchunk2Size
-                ...getChannelData(buffer)  // Audio data
-            ].flat();
-
-            return new Uint8Array(header);
-        }
-
-        // 文字列をバイト配列に変換する関数
-        function stringToBytes(str) {
-            return Array.from(str).map(c => c.charCodeAt(0));
-        }
-
-        // UInt32リトルエンディアンで書き込む関数
-        function writeUInt32LE(value) {
-            return [
-                value & 0xFF,
-                (value >> 8) & 0xFF,
-                (value >> 16) & 0xFF,
-                (value >> 24) & 0xFF
-            ];
-        }
-
-        // UInt16リトルエンディアンで書き込む関数
-        function writeUInt16LE(value) {
-            return [
-                value & 0xFF,
-                (value >> 8) & 0xFF
-            ];
-        }
-
-        // バッファからオーディオデータを取得する関数
-        function getChannelData(buffer) {
-            const data = buffer.getChannelData(0);
-            const audioData = [];
-            for (let i = 0; i < data.length; i++) {
-                const sample = Math.max(-1, Math.min(1, data[i])) * 32767;
-                audioData.push(sample & 0xFF, (sample >> 8) & 0xFF);
-            }
-            return audioData;
         }
     </script>
 </body>

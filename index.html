@@ -37,6 +37,9 @@
                 <option value="win7">win7エラー波</option>
                 <option value="tada">tada波</option>
                 <option value="mac">macOS起動音波</option>
+                <option value="guitar">ギター</option>
+                <option value="piano">ピアノ</option>
+                <option value="drum">ドラム</option>
             </select>
         </div>
         <div>
@@ -67,6 +70,18 @@
             <option value="pink">ピンクノイズ</option>
         </select>
         <button id="add-noise">ノイズを追加</button>
+    </div>
+
+    <!-- 追加楽器音セクション -->
+    <div id="instrument-section">
+        <h2>楽器音</h2>
+        <label for="instrument-type">楽器の種類:</label>
+        <select id="instrument-type">
+            <option value="guitar">ギター</option>
+            <option value="piano">ピアノ</option>
+            <option value="drum">ドラム</option>
+        </select>
+        <button id="add-instrument">楽器音を追加</button>
     </div>
 
     <!-- 効果音管理のコントロール -->
@@ -164,203 +179,128 @@
                     case 'sawtooth':
                         data[i] = (2 * (i / (sampleRate / frequency)) % 2) - 1;
                         break;
-                    case 'soboro': // そぼろ波: 低い音でノイズがかかる波形
+                    case 'soboro': // そぼろ波
                         data[i] = (Math.sin(2 * Math.PI * frequency * time) + 0.5 * (Math.random() * 2 - 1)) * 0.5;
                         break;
-                    case 'hito': // 人音: 人の声のような波形
-                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.sin(4 * Math.PI * time);
+                    case 'hito': // 人音
+                        data[i] = (Math.sin(2 * Math.PI * frequency * time) * (1 - Math.random() * 0.5));
                         break;
-                    case 'choir': // 合唱団: 複数のサイン波が重なった波形
-                        data[i] = 0.3 * Math.sin(2 * Math.PI * frequency * time) +
-                                  0.3 * Math.sin(2 * Math.PI * (frequency + 3) * time) +
-                                  0.3 * Math.sin(2 * Math.PI * (frequency + 6) * time);
+                    case 'choir': // 合唱団
+                        data[i] = (Math.sin(2 * Math.PI * frequency * time) + Math.sin(3 * Math.PI * frequency * time)) * 0.5;
                         break;
-                    case 'sword': // 剣振波: 力強い音の波形
-                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.sin(10 * Math.PI * time);
+                    case 'sword': // 剣振波
+                        data[i] = Math.sin(2 * Math.PI * frequency * time) * (Math.random() > 0.5 ? 1 : -1);
                         break;
-                    case 'win7': // Win7エラー波
-                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-5 * time);
+                    case 'win7': // win7エラー波
+                        data[i] = Math.sin(2 * Math.PI * frequency * time) * (1 - Math.random() * 0.7);
                         break;
                     case 'tada': // tada波
-                        data[i] = Math.sin(2 * Math.PI * frequency * time) * (time < 0.5 ? 1 : 0);
+                        data[i] = Math.sin(2 * Math.PI * frequency * time * (1 + 0.5 * Math.sin(2 * Math.PI * 2 * time)));
                         break;
                     case 'mac': // macOS起動音波
-                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.sin(0.5 * Math.PI * time);
+                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 2);
                         break;
-                    default:
-                        data[i] = 0;
+                    case 'guitar': // ギター音
+                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 4);
+                        break;
+                    case 'piano': // ピアノ音
+                        data[i] = Math.sin(4 * Math.PI * frequency * time) * Math.exp(-time * 4);
+                        break;
+                    case 'drum': // ドラム音
+                        data[i] = (Math.random() * 2 - 1) * Math.exp(-time * 10);
+                        break;
                 }
 
-                // フェードイン処理
+                // フェードインとフェードアウトを適用
                 if (i < fadeInEnd) {
                     data[i] *= i / fadeInLength;
-                }
-
-                // フェードアウト処理
-                if (i > fadeOutStart) {
+                } else if (i > fadeOutStart) {
                     data[i] *= (length - i) / fadeOutLength;
                 }
             }
-
             return buffer;
         }
 
-        // ノイズの追加
-        document.getElementById('add-noise').addEventListener('click', () => {
-            const noiseType = document.getElementById('noise-type').value;
-            const noiseBuffer = createNoise(noiseType, 1); // 1秒のノイズ
-            syllables.push({ buffer: noiseBuffer, noiseType: noiseType });
-            currentSyllableIndex = syllables.length - 1;
-            updateSyllableList();
-        });
-
-        // ノイズ生成関数
-        function createNoise(type, duration) {
-            const sampleRate = audioContext.sampleRate;
-            const length = sampleRate * duration;
-            const buffer = audioContext.createBuffer(1, length, sampleRate);
-            const data = buffer.getChannelData(0);
-
-            for (let i = 0; i < length; i++) {
-                switch (type) {
-                    case 'white':
-                        data[i] = Math.random() * 2 - 1;
-                        break;
-                    case 'pink':
-                        // 簡易的なピンクノイズ生成アルゴリズム
-                        let white = Math.random() * 2 - 1;
-                        data[i] = (data[i - 1] + (0.02 * white)) / 1.02;
-                        break;
-                    default:
-                        data[i] = 0;
-                }
-            }
-
-            return buffer;
-        }
-
-        // 再生ボタン
+        // 音節を再生する関数
         document.getElementById('play').addEventListener('click', () => {
-            const bufferSource = audioContext.createBufferSource();
-            const combinedBuffer = combineBuffers(syllables.map(s => s.buffer));
-            bufferSource.buffer = combinedBuffer;
-            bufferSource.connect(audioContext.destination);
-            bufferSource.start(0);
-        });
-
-        // 複数のバッファを結合して1つにする関数
-        function combineBuffers(buffers) {
-            const totalLength = buffers.reduce((sum, b) => sum + b.length, 0);
-            const combinedBuffer = audioContext.createBuffer(1, totalLength, audioContext.sampleRate);
-            const combinedData = combinedBuffer.getChannelData(0);
+            const outputBuffer = audioContext.createBuffer(1, syllables.reduce((sum, syllable) => sum + syllable.buffer.length, 0), audioContext.sampleRate);
             let offset = 0;
-
-            buffers.forEach(buffer => {
-                combinedData.set(buffer.getChannelData(0), offset);
-                offset += buffer.length;
+            syllables.forEach(syllable => {
+                outputBuffer.getChannelData(0).set(syllable.buffer.getChannelData(0), offset);
+                offset += syllable.buffer.length;
             });
-
-            return combinedBuffer;
-        }
-
-        // 保存ボタン
-        document.getElementById('save').addEventListener('click', () => {
-            const data = JSON.stringify(syllables);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'syllables.json';
-            a.click();
+            const source = audioContext.createBufferSource();
+            source.buffer = outputBuffer;
+            source.connect(audioContext.destination);
+            source.start();
         });
 
-        // 読み込みボタン
-        document.getElementById('load').addEventListener('click', () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'application/json';
-            input.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    syllables = JSON.parse(event.target.result);
-                    updateSyllableList();
-                    updateSyllableEditor();
-                };
-                reader.readAsText(file);
-            });
-            input.click();
-        });
-
-        // エクスポートボタン
+        // WAVファイルとしてエクスポートする関数
         document.getElementById('export').addEventListener('click', () => {
-            const combinedBuffer = combineBuffers(syllables.map(s => s.buffer));
-            const wavData = bufferToWave(combinedBuffer);
-            const blob = new Blob([wavData], { type: 'audio/wav' });
+            const outputBuffer = audioContext.createBuffer(1, syllables.reduce((sum, syllable) => sum + syllable.buffer.length, 0), audioContext.sampleRate);
+            let offset = 0;
+            syllables.forEach(syllable => {
+                outputBuffer.getChannelData(0).set(syllable.buffer.getChannelData(0), offset);
+                offset += syllable.buffer.length;
+            });
+
+            const wav = audioBufferToWav(outputBuffer);
+            const blob = new Blob([wav], { type: 'audio/wav' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'sound.wav';
-            a.click();
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'custom_sound.wav';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         });
 
-        // AudioBufferをWAV形式に変換する関数
-        function bufferToWave(buffer) {
+        // AudioBufferをWAVに変換する関数
+        function audioBufferToWav(buffer) {
             const numOfChan = buffer.numberOfChannels,
                 length = buffer.length * numOfChan * 2 + 44,
-                bufferData = new ArrayBuffer(length),
-                view = new DataView(bufferData),
+                bufferView = new DataView(new ArrayBuffer(length)),
                 channels = [],
-                sampleRate = buffer.sampleRate;
+                sampleRate = buffer.sampleRate,
+                bitDepth = 16;
 
-            let offset = 0,
-                pos = 0;
+            // ヘッダ情報
+            writeString(bufferView, 0, 'RIFF');
+            bufferView.setUint32(4, length - 8, true);
+            writeString(bufferView, 8, 'WAVE');
+            writeString(bufferView, 12, 'fmt ');
+            bufferView.setUint32(16, 16, true);
+            bufferView.setUint16(20, 1, true);
+            bufferView.setUint16(22, numOfChan, true);
+            bufferView.setUint32(24, sampleRate, true);
+            bufferView.setUint32(28, sampleRate * numOfChan * 2, true);
+            bufferView.setUint16(32, numOfChan * 2, true);
+            bufferView.setUint16(34, bitDepth, true);
+            writeString(bufferView, 36, 'data');
+            bufferView.setUint32(40, length - 44, true);
 
-            function setUint16(data) {
-                view.setUint16(pos, data, true);
-                pos += 2;
-            }
-
-            function setUint32(data) {
-                view.setUint32(pos, data, true);
-                pos += 4;
-            }
-
-            // RIFF chunk descriptor
-            setUint32(0x46464952); // "RIFF"
-            setUint32(length - 8); // file length - 8
-            setUint32(0x45564157); // "WAVE"
-
-            // FMT sub-chunk
-            setUint32(0x20746d66); // "fmt "
-            setUint32(16); // sub-chunk size
-            setUint16(1); // PCM format
-            setUint16(numOfChan); // number of channels
-            setUint32(sampleRate); // sample rate
-            setUint32(sampleRate * 2 * numOfChan); // byte rate
-            setUint16(numOfChan * 2); // block align
-            setUint16(16); // bits per sample
-
-            // data sub-chunk
-            setUint32(0x61746164); // "data"
-            setUint32(length - pos - 4); // data chunk size
-
-            // write interleaved data
-            for (let i = 0; i < buffer.numberOfChannels; i++) {
+            // 音声データ
+            for (let i = 0; i < numOfChan; i++) {
                 channels.push(buffer.getChannelData(i));
             }
 
-            while (pos < length) {
-                for (let i = 0; i < numOfChan; i++) {
-                    let sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
-                    sample = (sample < 0 ? sample * 0x8000 : sample * 0x7FFF) | 0; // scale to 16-bit
-                    view.setInt16(pos, sample, true); // write 16-bit sample
-                    pos += 2;
+            let offset = 44;
+            for (let i = 0; i < buffer.length; i++) {
+                for (let channel = 0; channel < numOfChan; channel++) {
+                    let sample = Math.max(-1, Math.min(1, channels[channel][i]));
+                    sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                    bufferView.setInt16(offset, sample, true);
+                    offset += 2;
                 }
-                offset++;
             }
 
-            return bufferData;
+            return bufferView.buffer;
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
         }
     </script>
 </body>

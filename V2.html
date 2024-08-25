@@ -50,6 +50,8 @@
                 <option value="ori1">1</option>
                 <option value="none">無音</option>
                 <option value="mud">泥</option>
+                <option value="slime">スライム</option>
+                <option value="light">光</option>
             </select>
         </div>
         <div>
@@ -406,6 +408,16 @@
     　　　　　　　　　　　　const mudEnvelope = Math.max(0, 1 - (time / mudLength)); // 徐々に減衰するエンベロープ
     　　　　　　　　　　　　value = mudEnvelope * (Math.random() * 2 - 1) * (Math.exp(-time * 2) * 0.5); // ノイズとエンベロープで泥音を模倣
     　　　　　　　　　　　　break;
+                  case 'light':
+                        const lightFrequency = 2000; // 高周波数
+                        const lightEnvelope = Math.sin(2 * Math.PI * time * 0.5); // ゆっくりとした波形変化
+                        value = lightEnvelope * Math.sin(2 * Math.PI * lightFrequency * time) * 0.5; // 明るい音
+                        break;
+                 case 'slime':
+                        const slimeFrequency = 100; // 低周波数
+                        const slimeEnvelope = Math.sin(2 * Math.PI * time) * Math.exp(-time * 2); // 急速に減衰する波形
+                        value = slimeEnvelope * (Math.random() * 0.5 + 0.5) * Math.sin(2 * Math.PI * slimeFrequency * time); // 弾力のある音
+                        break;
                 }
 
                 // フェードインとフェードアウト処理

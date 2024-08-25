@@ -413,7 +413,7 @@
                         value = lightEnvelope * Math.sin(2 * Math.PI * lightFrequency * time) * 0.5; // 明るい音
                         break;
                     case 'slime':
-                        const slimeFrequency = 100; // 低周波数
+                        const slimeFrequency = 500; // 低周波数
                         const slimeEnvelope = Math.sin(2 * Math.PI * time) * Math.exp(-time * 2); // 急速に減衰する波形
                         value = slimeEnvelope * (Math.random() * 0.5 + 0.5) * Math.sin(2 * Math.PI * slimeFrequency * time); // 弾力のある音
                         break;

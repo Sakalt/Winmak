@@ -217,7 +217,7 @@
                         waveValue = 1.6 * ((t * frequency) % 1) - 1;
                         break;
                     case 'soboro':
-                        waveValue = Math.sin(2 * Math.PI * frequency * t) * Math.random();
+                        waveValue = Math.random(2 * Math.PI * frequency * t) * Math.random();
                         break;
                     case 'hito':
                         waveValue = Math.sin(2 * Math.PI * frequency * t) * Math.sin(2 * Math.PI * frequency * t);
@@ -232,10 +232,17 @@
                         waveValue = Math.sin(2 * Math.PI * frequency * t) * (Math.random() < 0.5 ? 1 : -1);
                         break;
                     case 'tada':
-                        waveValue = Math.sin(2 * Math.PI * frequency * t) * (1 + Math.random() * 0.5);
+                        waveValue = Math.sin(3 * Math.PI * frequency * t) * (1 + Math.random() * 0.5);
                         break;
                     case 'mac':
-                        waveValue = Math.sin(2 * Math.PI * frequency * t) * (1 + Math.random() * 0.3);
+                        // 特徴的なmacOS起動音を模倣
+                        if (i < totalSamples * 0.2) {
+                            value = Math.sin(2 * Math.PI * frequency * time) * (1 - i / (totalSamples * 0.2));
+                        } else if (i < totalSamples * 0.6) {
+                            value = Math.sin(2 * Math.PI * frequency * time) * (i - totalSamples * 0.2) / (totalSamples * 0.4);
+                        } else {
+                            value = Math.sin(2 * Math.PI * frequency * time) * (1 - (i - totalSamples * 0.6) / (totalSamples * 0.4));
+                        }
                         break;
                     case 'guitar':
                         waveValue = Math.sin(2 * Math.PI * frequency * t) + Math.sin(2 * Math.PI * frequency * t * 0.5);
@@ -244,7 +251,7 @@
                         waveValue = Math.sin(2 * Math.PI * frequency * t) * (0.3 + Math.random() * 0.2);
                         break;
                     case 'piano':
-                        waveValue = Math.sin(2 * Math.PI * frequency * t) * (0.5 + Math.random() * 0.5);
+                        waveValue = Math.sin(2 * Math.PI * frequency * t) * (0.75 + Math.random() * 0.5);
                         break;
                     case 'drum':
                         waveValue = Math.random() * (Math.sin(2 * Math.PI * frequency * t) - 0.5);

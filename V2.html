@@ -48,6 +48,7 @@
                 <option value="hihat">ハイハット</option>
                 <option value="fireworks">花火</option>
                 <option value="ori1">1</option>
+                <option value="none">無音</option>
             </select>
         </div>
         <div>
@@ -389,6 +390,9 @@
                         break;
                     case 'ori1':
                         value = Math.sin(2 * Math.PI * frequency * time) * (Math.sin(2 * Math.PI * frequency * time) * 0.5);
+                        break;
+                    case 'none':
+                        value = 0
                         break;
                 }
 

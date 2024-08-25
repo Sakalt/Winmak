@@ -369,7 +369,11 @@
                         value = Math.sin(2 * Math.PI * frequency * time) * (Math.sin(2 * Math.PI * frequency * time) * 0.5);
                         break;
                     case 'mac':
-                        value = Math.sin(2 * Math.PI * frequency * time) * (Math.random() * 0.5);
+                        const macFrequency1 = 330; // 音の基本周波数（例えば330Hzの音）
+                        const macFrequency2 = 660; // 音の追加周波数（例えば660Hzの音）
+                        const macLength = 1.5; // 音の長さ（秒）
+                        const macEnvelope = Math.max(0, 1 - (time / macLength)); // 減衰エンベロープ
+                        value = macEnvelope * (Math.sin(2 * Math.PI * macFrequency1 * time) + Math.sin(2 * Math.PI * macFrequency2 * time) * 0.5);
                         break;
                     case 'guitar':
                         const envelope = Math.exp(-time * 10); // 短いエンベロープでアタックを強調
@@ -413,9 +417,11 @@
                         value = lightEnvelope * Math.sin(2 * Math.PI * lightFrequency * time) * 0.5; // 明るい音
                         break;
                     case 'slime':
+                    // 基本的なパラメータ
                         const slimeFrequency = 500; // 低周波数
-                        const slimeEnvelope = Math.sin(2 * Math.PI * time) * Math.exp(-time * 2); // 急速に減衰する波形
-                        value = slimeEnvelope * (Math.random() * 0.5 + 0.5) * Math.sin(2 * Math.PI * slimeFrequency * time); // 弾力のある音
+                        const slimeEnvelope = Math.exp(-time * 5); // 徐々に減衰するエンベロープ
+                        const slimeNoise = Math.random() * 0.2 - 0.1; // 軽いノイズ
+                        value = slimeEnvelope * (Math.sin(2 * Math.PI * slimeFrequency * time) + slimeNoise);
                         break;
                 }
 

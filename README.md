@@ -1,7 +1,7 @@
 https://sakalt.github.io/Winmak/V2.html
 https://sakalt.github.io/Winmak/Debug.html
 https://sakalt.github.io/Winmak/Debug2.html
-https://chatgpt.com
+[effect](https://sakalt.github.io/Winmak/effect.html)
 目安
 正弦波 
 560

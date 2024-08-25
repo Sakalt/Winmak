@@ -230,7 +230,9 @@
                         data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 2) + 0.2 * Math.sin(4 * Math.PI * frequency * time);
                         break;
                     case 'guitar-basic':
-                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 2);
+                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 1.5) + 
+                          0.2 * Math.sin(4 * Math.PI * frequency * time) +
+                          0.1 * Math.sin(6 * Math.PI * frequency * time);
                         break;
                     case 'guitar-strumming':
                         data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.sin(2 * Math.PI * 3 * time);

@@ -430,10 +430,11 @@
                 }
 
                 // 揺れ処理
-                if (shakeIntensity > 0 && shakeFrequency > 0) {
-                    const shake = Math.sin(2 * Math.PI * shakeFrequency * time) * shakeIntensity;
-                    data[i] += shake;
-                }
+                // 揺れ処理
+               if (shakeIntensity > 0 && shakeFrequency > 0) {
+               const shake = Math.sin(2 * Math.PI * shakeFrequency * time) * shakeIntensity;
+               data[i] += shake;
+            }
 
                 data[i] = value;
             }

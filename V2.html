@@ -360,7 +360,9 @@
                         value = Math.sin(2 * Math.PI * frequency * time) * (1 + Math.sin(2 * Math.PI * frequency * time) * 0.5);
                         break;
                     case 'win7':
-                        value = Math.sin(2 * Math.PI * frequency * time) * (Math.random() - 0.5);
+                        const win7Length = 1.5; // 起動音の長さ
+                        const win7Envelope = Math.max(0, 1 - (time / win7Length)); // 減衰するエンベロープ
+                        value = win7Envelope * (Math.sin(2 * Math.PI * time * 0.8) + Math.sin(2 * Math.PI * time * 1.6)) * 0.3; // 特徴的な音の組み合わせ
                         break;
                     case 'tada':
                         value = Math.sin(2 * Math.PI * frequency * time) * (Math.sin(2 * Math.PI * frequency * time) * 0.5);

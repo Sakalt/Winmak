@@ -1,5 +1,6 @@
 https://sakalt.github.io/Winmak/V2.html
 https://sakalt.github.io/Winmak/Debug.html
+https://sakalt.github.io/Winmak/Debug2.html
 目安
 正弦波 
 560

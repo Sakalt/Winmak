@@ -172,144 +172,180 @@
                 syllable.fadeOut = parseFloat(document.getElementById('fade-out').value);
                 syllable.shakeIntensity = parseFloat(document.getElementById('shake-intensity').value);
                 syllable.shakeFrequency = parseFloat(document.getElementById('shake-frequency').value);
-                syllable.buffer = createWave(syllable.waveType, syllable.frequency, syllable.duration, syllable.fadeIn, syllable.fadeOut, syllable.shakeIntensity, syllable.shakeFrequency);
+                syllable.buffer = createWave(
+                    syllable.waveType,
+                    syllable.frequency,
+                    syllable.duration,
+                    syllable.fadeIn,
+                    syllable.fadeOut,
+                    syllable.shakeIntensity,
+                    syllable.shakeFrequency
+                );
                 updateSyllableList();
             }
         });
 
-        // 音波生成のための関数
-        function createWave(waveType, frequency, duration, fadeIn, fadeOut, shakeIntensity, shakeFrequency) {
+        // 音節を削除する関数
+        function deleteSyllable(index) {
+            syllables.splice(index, 1);
+            currentSyllableIndex = -1;
+            updateSyllableList();
+            updateSyllableEditor();
+        }
+
+        // 波形を作成する関数
+        function createWave(type, frequency, duration, fadeIn, fadeOut, shakeIntensity, shakeFrequency) {
             const sampleRate = audioContext.sampleRate;
-            const totalSamples = Math.floor(sampleRate * duration);
-            const buffer = audioContext.createBuffer(1, totalSamples, sampleRate);
+            const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
             const data = buffer.getChannelData(0);
-            const fadeInSamples = Math.floor(sampleRate * fadeIn);
-            const fadeOutSamples = Math.floor(sampleRate * fadeOut);
-            const shakePeriod = sampleRate / shakeFrequency;
-            
-            for (let i = 0; i < totalSamples; i++) {
-                let time = i / sampleRate;
+            const length = data.length;
+            const fadeInSamples = Math.round(fadeIn * sampleRate);
+            const fadeOutSamples = Math.round(fadeOut * sampleRate);
+
+            for (let i = 0; i < length; i++) {
+                let t = i / sampleRate;
                 let value = 0;
 
-                switch (waveType) {
+                switch (type) {
                     case 'sine':
-                        value = Math.sin(2 * Math.PI * frequency * time);
+                        value = Math.sin(2 * Math.PI * frequency * t);
                         break;
                     case 'square':
-                        value = Math.sign(Math.sin(2 * Math.PI * frequency * time));
+                        value = (Math.sin(2 * Math.PI * frequency * t) >= 0) ? 1 : -1;
                         break;
                     case 'triangle':
-                        value = 2 * Math.abs(2 * (time * frequency - Math.floor(time * frequency + 0.5))) - 1;
+                        value = 2 * Math.abs(2 * ((t * frequency) % 1) - 1) - 1;
                         break;
                     case 'sawtooth':
-                        value = 2 * (time * frequency - Math.floor(time * frequency + 0.5));
+                        value = 2 * (t * frequency % 1) - 1;
                         break;
                     case 'triangle2':
-                        value = 1 - 4 * Math.abs(Math.round(time * frequency) - (time * frequency + 0.5));
+                        value = 2 * Math.abs(2 * ((t * frequency / 2) % 1) - 1) - 1;
                         break;
                     case 'sawtooth2':
-                        value = 2 * (time * frequency - Math.floor(time * frequency + 0.5)) - 1;
+                        value = 2 * ((t * frequency / 2) % 1) - 1;
                         break;
                     case 'soboro':
-                        value = Math.random() * 2 - 1;
+                        value = Math.sin(2 * Math.PI * frequency * t) + Math.sin(4 * Math.PI * frequency * t);
                         break;
                     case 'hito':
-                        value = (Math.sin(2 * Math.PI * frequency * time) + Math.sin(2 * Math.PI * frequency * time * 2)) / 2;
+                        value = Math.sin(2 * Math.PI * frequency * t) * (1 - Math.abs(Math.sin(2 * Math.PI * 0.5 * t)));
                         break;
                     case 'choir':
-                        value = (Math.sin(2 * Math.PI * frequency * time) + Math.sin(2 * Math.PI * frequency * time * 2)) / 2;
+                        value = Math.sin(2 * Math.PI * frequency * t) * Math.cos(2 * Math.PI * 0.3 * t);
                         break;
                     case 'sword':
-                        value = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 5);
+                        value = Math.random() * 2 - 1;
                         break;
                     case 'win7':
-                        value = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 5);
+                        value = Math.random() * 2 - 1;
                         break;
                     case 'tada':
-                        value = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 5);
+                        value = Math.sin(2 * Math.PI * frequency * t) * (1 - Math.abs(Math.sin(2 * Math.PI * 0.5 * t)));
                         break;
                     case 'mac':
-                        value = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 5);
+                        value = Math.sin(2 * Math.PI * frequency * t) * (1 - Math.abs(Math.sin(2 * Math.PI * 0.5 * t)));
                         break;
                     case 'guitar':
-                        value = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 5);
+                        value = Math.sin(2 * Math.PI * frequency * t) * Math.cos(2 * Math.PI * 0.5 * t);
                         break;
                     case 'piano':
-                        value = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 5);
+                        value = Math.sin(2 * Math.PI * frequency * t) * Math.cos(2 * Math.PI * 0.3 * t);
                         break;
                     case 'drum':
-                        value = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 5);
+                        value = Math.random() * 2 - 1;
                         break;
                     case 'hihat':
                         value = Math.random() * 2 - 1;
                         break;
                     case 'fireworks':
-                        value = Math.random() * 2 - 1;
+                        value = Math.sin(2 * Math.PI * frequency * t) * Math.random();
                         break;
                     case 'ori1':
-                        value = Math.sin(2 * Math.PI * frequency * time) * Math.exp(-time * 5);
+                        value = Math.sin(2 * Math.PI * frequency * t) * Math.sin(2 * Math.PI * 0.5 * t);
                         break;
                 }
 
-                // ノイズや揺れの追加
-                if (shakeIntensity > 0) {
-                    const shakeOffset = Math.sin(2 * Math.PI * i / shakePeriod) * shakeIntensity;
-                    value += shakeOffset;
-                }
-
+                // フェードイン
                 if (i < fadeInSamples) {
                     value *= i / fadeInSamples;
-                } else if (i > totalSamples - fadeOutSamples) {
-                    value *= (totalSamples - i) / fadeOutSamples;
+                }
+                // フェードアウト
+                if (i >= length - fadeOutSamples) {
+                    value *= (length - i) / fadeOutSamples;
+                }
+                // 揺れ
+                if (shakeIntensity > 0) {
+                    const shake = Math.sin(2 * Math.PI * shakeFrequency * t) * shakeIntensity;
+                    value += shake;
                 }
 
                 data[i] = value;
             }
+
             return buffer;
         }
-
-        // 音節を再生する関数
-        function playSyllables() {
-            if (syllables.length === 0) return;
-
-            let delay = 0;
-
-            syllables.forEach(syllable => {
-                const source = audioContext.createBufferSource();
-                source.buffer = syllable.buffer;
-                source.connect(audioContext.destination);
-                source.start(audioContext.currentTime + delay);
-                delay += syllable.duration;
-            });
-        }
-
-        // 再生ボタンのクリックイベント
-        document.getElementById('play').addEventListener('click', () => {
-            playSyllables();
-        });
 
         // ノイズを追加する関数
         document.getElementById('add-noise').addEventListener('click', () => {
             const noiseType = document.getElementById('noise-type').value;
-            const noiseBuffer = createNoise(noiseType);
-            syllables.push({ waveType: noiseType, frequency: 0, duration: 1, fadeIn: 0, fadeOut: 0, shakeIntensity: 0, shakeFrequency: 5, buffer: noiseBuffer });
+            const duration = 1; // ノイズの長さを1秒と仮定
+
+            let buffer;
+            switch (noiseType) {
+                case 'white':
+                    buffer = createWhiteNoise(duration);
+                    break;
+                case 'pink':
+                    buffer = createPinkNoise(duration);
+                    break;
+            }
+
+            const syllable = {
+                waveType: noiseType,
+                frequency: 440,
+                duration: duration,
+                fadeIn: 0,
+                fadeOut: 0,
+                shakeIntensity: 0,
+                shakeFrequency: 5,
+                buffer: buffer
+            };
+            syllables.push(syllable);
+            currentSyllableIndex = syllables.length - 1;
             updateSyllableList();
+            updateSyllableEditor();
         });
 
-        function createNoise(type) {
+        // 白色ノイズを生成する関数
+        function createWhiteNoise(duration) {
             const sampleRate = audioContext.sampleRate;
-            const duration = 1;
-            const totalSamples = Math.floor(sampleRate * duration);
-            const buffer = audioContext.createBuffer(1, totalSamples, sampleRate);
+            const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
             const data = buffer.getChannelData(0);
 
-            for (let i = 0; i < totalSamples; i++) {
-                if (type === 'white') {
-                    data[i] = Math.random() * 2 - 1;
-                } else if (type === 'pink') {
-                    // ピンクノイズの生成ロジック（簡略版）
-                    data[i] = Math.random() * 2 - 1;
-                }
+            for (let i = 0; i < data.length; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            return buffer;
+        }
+
+        // ピンクノイズを生成する関数
+        function createPinkNoise(duration) {
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
+            const data = buffer.getChannelData(0);
+            const pinkNoise = new Array(data.length);
+
+            // ピンクノイズの生成ロジック（簡易版）
+            let b0 = 0;
+            let b1 = 0;
+            for (let i = 0; i < data.length; i++) {
+                let whiteNoise = Math.random() * 2 - 1;
+                pinkNoise[i] = whiteNoise - 0.5;
+                b0 = 0.02109238 * pinkNoise[i] + 0.07113478 * b0 - 0.6888 * b1;
+                b1 = 0.6888 * b0;
+                data[i] = b0;
             }
 
             return buffer;
@@ -318,142 +354,122 @@
         // 楽器音を追加する関数
         document.getElementById('add-instrument').addEventListener('click', () => {
             const instrumentType = document.getElementById('instrument-type').value;
-            const instrumentBuffer = createInstrumentSound(instrumentType);
-            syllables.push({ waveType: instrumentType, frequency: 440, duration: 1, fadeIn: 0, fadeOut: 0, shakeIntensity: 0, shakeFrequency: 5, buffer: instrumentBuffer });
+            const duration = 1; // 楽器音の長さを1秒と仮定
+
+            let buffer;
+            switch (instrumentType) {
+                case 'guitar':
+                    buffer = createInstrumentSound('guitar', duration);
+                    break;
+                case 'piano':
+                    buffer = createInstrumentSound('piano', duration);
+                    break;
+                case 'drum':
+                    buffer = createInstrumentSound('drum', duration);
+                    break;
+            }
+
+            const syllable = {
+                waveType: instrumentType,
+                frequency: 440,
+                duration: duration,
+                fadeIn: 0,
+                fadeOut: 0,
+                shakeIntensity: 0,
+                shakeFrequency: 5,
+                buffer: buffer
+            };
+            syllables.push(syllable);
+            currentSyllableIndex = syllables.length - 1;
             updateSyllableList();
+            updateSyllableEditor();
         });
 
-        function createInstrumentSound(type) {
+        // 楽器音を生成する関数
+        function createInstrumentSound(type, duration) {
             const sampleRate = audioContext.sampleRate;
-            const duration = 1;
-            const totalSamples = Math.floor(sampleRate * duration);
-            const buffer = audioContext.createBuffer(1, totalSamples, sampleRate);
+            const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
             const data = buffer.getChannelData(0);
 
-            for (let i = 0; i < totalSamples; i++) {
-                let time = i / sampleRate;
-                if (type === 'guitar') {
-                    data[i] = Math.sin(2 * Math.PI * 440 * time) * Math.exp(-time * 5);
-                } else if (type === 'piano') {
-                    data[i] = Math.sin(2 * Math.PI * 440 * time) * Math.exp(-time * 5);
-                } else if (type === 'drum') {
-                    data[i] = Math.random() * 2 - 1;
+            for (let i = 0; i < data.length; i++) {
+                let t = i / sampleRate;
+                switch (type) {
+                    case 'guitar':
+                        data[i] = Math.sin(2 * Math.PI * 440 * t) * Math.sin(2 * Math.PI * 5 * t);
+                        break;
+                    case 'piano':
+                        data[i] = Math.sin(2 * Math.PI * 440 * t) * Math.cos(2 * Math.PI * 0.5 * t);
+                        break;
+                    case 'drum':
+                        data[i] = Math.random() * 2 - 1;
+                        break;
                 }
             }
 
             return buffer;
         }
 
-        // 保存ボタンのクリックイベント
-        document.getElementById('save').addEventListener('click', () => {
-            const blob = new Blob([JSON.stringify(syllables)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'syllables.json';
-            a.click();
-            URL.revokeObjectURL(url);
-        });
-
-        // 読み込みボタンのクリックイベント
-        document.getElementById('load').addEventListener('click', () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        syllables = JSON.parse(reader.result);
-                        updateSyllableList();
-                    };
-                    reader.readAsText(file);
-                }
-            });
-            input.click();
-        });
-
-        // WAVとしてエクスポートボタンのクリックイベント
-        document.getElementById('export').addEventListener('click', () => {
-            if (syllables.length === 0) return;
-
-            const totalDuration = syllables.reduce((sum, syllable) => sum + syllable.duration, 0);
-            const sampleRate = audioContext.sampleRate;
-            const totalSamples = Math.floor(sampleRate * totalDuration);
-            const buffer = audioContext.createBuffer(1, totalSamples, sampleRate);
-            const data = buffer.getChannelData(0);
-
-            let offset = 0;
-            syllables.forEach(syllable => {
-                const syllableData = syllable.buffer.getChannelData(0);
-                for (let i = 0; i < syllable.buffer.length; i++) {
-                    data[offset + i] = syllableData[i];
-                }
-                offset += syllable.buffer.length;
-            });
-
-            const wavData = encodeWAV(buffer);
-            const blob = new Blob([wavData], { type: 'audio/wav' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'sound.wav';
-            a.click();
-            URL.revokeObjectURL(url);
-        });
-
-        function encodeWAV(buffer) {
-            const numOfChan = buffer.numberOfChannels,
-                length = buffer.length * numOfChan * 2 + 44,
-                bufferArray = new ArrayBuffer(length),
-                view = new DataView(bufferArray),
-                channels = [],
-                sampleRate = buffer.sampleRate,
-                offset = 0,
-                samples = buffer.getChannelData(0);
-
-            function writeString(str) {
-                for (let i = 0; i < str.length; i++) {
-                    view.setUint8(offset + i, str.charCodeAt(i));
-                }
-            }
-
-            function floatTo16BitPCM(output, offset, input) {
-                for (let i = 0; i < input.length; i++, offset += 2) {
-                    const s = Math.max(-1, Math.min(1, input[i]));
-                    output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-                }
-            }
-
-            writeString('RIFF');
-            view.setUint32(4, length - 8, true);
-            writeString('WAVE');
-            writeString('fmt ');
-            view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true);
-            view.setUint16(22, numOfChan, true);
-            view.setUint32(24, sampleRate, true);
-            view.setUint32(28, sampleRate * numOfChan * 2, true);
-            view.setUint16(32, numOfChan * 2, true);
-            view.setUint16(34, 16, true);
-            writeString('data');
-            view.setUint32(40, length - 44, true);
-
-            floatTo16BitPCM(view, 44, samples);
-
-            return view.buffer;
-        }
-
+        // 音節リストを更新する関数
         function updateSyllableList() {
             const list = document.getElementById('syllable-list');
             list.innerHTML = '';
             syllables.forEach((syllable, index) => {
                 const item = document.createElement('li');
-                item.textContent = `${syllable.waveType} - ${syllable.frequency}Hz (${syllable.duration}s)`;
+                item.textContent = `Type: ${syllable.waveType}, Frequency: ${syllable.frequency} Hz, Duration: ${syllable.duration}s`;
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => deleteSyllable(index));
+                item.appendChild(deleteButton);
                 list.appendChild(item);
             });
         }
+
+        // 音節エディタを更新する関数
+        function updateSyllableEditor() {
+            const editor = document.getElementById('syllable-editor');
+            const syllable = syllables[currentSyllableIndex];
+            if (syllable) {
+                document.getElementById('wave-type').value = syllable.waveType;
+                document.getElementById('frequency').value = syllable.frequency;
+                document.getElementById('duration').value = syllable.duration;
+                document.getElementById('fade-in').value = syllable.fadeIn;
+                document.getElementById('fade-out').value = syllable.fadeOut;
+                document.getElementById('shake-intensity').value = syllable.shakeIntensity;
+                document.getElementById('shake-frequency').value = syllable.shakeFrequency;
+            }
+        }
+
+        // 音節を再生する関数
+        document.getElementById('play-syllable').addEventListener('click', () => {
+            if (currentSyllableIndex >= 0) {
+                const syllable = syllables[currentSyllableIndex];
+                const source = audioContext.createBufferSource();
+                source.buffer = syllable.buffer;
+                source.connect(audioContext.destination);
+                source.start();
+            }
+        });
+
+        // 音節をミキサーに追加する関数
+        document.getElementById('add-to-mixer').addEventListener('click', () => {
+            if (currentSyllableIndex >= 0) {
+                const syllable = syllables[currentSyllableIndex];
+                const source = audioContext.createBufferSource();
+                source.buffer = syllable.buffer;
+                source.connect(mixer);
+                source.start();
+            }
+        });
+
+        // ミキサーを再生する関数
+        document.getElementById('play-mixer').addEventListener('click', () => {
+            mixer.start();
+        });
+
+        // ミキサーを停止する関数
+        document.getElementById('stop-mixer').addEventListener('click', () => {
+            mixer.stop();
+        });
     </script>
 </body>
 </html>

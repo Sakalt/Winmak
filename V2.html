@@ -371,8 +371,9 @@
                         value = Math.sin(2 * Math.PI * frequency * time) * (Math.random() * 0.5);
                         break;
                     case 'guitar':
-                        value = Math.sin(2 * Math.PI * frequency * time) * (Math.sin(2 * Math.PI * frequency * time) * 0.5);
-                        break;
+                       　const envelope = Math.exp(-time * 10); // 短いエンベロープでアタックを強調
+                       　value = envelope * (Math.sin(2 * Math.PI * frequency * time) + Math.sin(2 * Math.PI * time * 5)) * (Math.random() * 0.2 + 0.8); // 変化するピッチとノイズを加える
+                        break; Math.sin(2 * Math.PI * frequency * time) * (Math.sin(2 * Math.PI * frequency * time) * 0.5);
                     case 'ori2':
                         value = Math.sin(2 * Math.PI * frequency * time) * (Math.random() * 0.5);
                         break;
@@ -394,6 +395,17 @@
                     case 'none':
                         value = 0
                         break;
+ 　　　　　　　　　　　case 'sword':
+    　　　　　　　　　　　　const swordLength = 0.2; // 短い音の長さ
+    　　　　　　　　　　　　const swordFrequency = 1000; // 高い周波数で金属音を模倣
+    　　　　　　　　　　　　const swordEnvelope = Math.max(0, 1 - (time / swordLength)); // 短いアタックと急速な減衰
+    　　　　　　　　　　　　value = swordEnvelope * Math.sin(2 * Math.PI * swordFrequency * time) * (Math.random() * 0.5 + 0.5); // ノイズを加えて金属的な音にする
+    　　　　　　　　　　　　break;
+　　　　　　　　　　　case 'mud':
+    　　　　　　　　　　　　const mudLength = 0.5; // 泥音の長さ
+    　　　　　　　　　　　　const mudEnvelope = Math.max(0, 1 - (time / mudLength)); // 徐々に減衰するエンベロープ
+    　　　　　　　　　　　　value = mudEnvelope * (Math.random() * 2 - 1) * (Math.exp(-time * 2) * 0.5); // ノイズとエンベロープで泥音を模倣
+    　　　　　　　　　　　　break;
                 }
 
                 // フェードインとフェードアウト処理

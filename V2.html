@@ -43,6 +43,7 @@
                 <option value="hihat">ハイハット</option>
                 <option value="fireworks">花火</option>
                 <option value="ori1">1</option>
+                <option value="ori2">2</option>
             </select>
         </div>
         <div>
@@ -209,8 +210,8 @@
                         value = (Math.sin(phase) + Math.sin(phase * 1.5)) / 2;
                         break;
                     case 'sword':
-                        value = Math.sin(phase) * Math.sin(phase * 3);
-                        break;
+    　　　　　　　　　　　value = (Math.sin(phase) * (1 - t * 0.2) + Math.sin(phase * 2) * 0.5) * (1 + Math.sin(t * Math.PI * 10) * 0.1);
+    　　　　　　　　　　　break;
                     case 'win7':
                         value = Math.sin(phase) * Math.cos(phase);
                         break;
@@ -223,12 +224,15 @@
                     case 'guitar':
                         value = Math.sin(phase) * Math.cos(phase * 0.5);
                         break;
+                    case 'ori2':
+                        value = Math.cos(phase) * Math.sin(phase * 2);
+                        break;
                     case 'piano':
                         value = Math.sin(phase) * (Math.cos(phase) + Math.sin(phase * 2));
                         break;
-                    case 'drum':
-                        value = Math.sin(phase) * Math.sin(phase * 2);
-                        break;
+　　　　　　　　　　　case 'drum':
+    　　　　　　　　　　　value = Math.sin(phase) * (1 - t * 0.5) + Math.random() * 0.2; // バスドラム風の音
+    　　　　　　　　　　　break;
                     case 'hihat':
                         value = Math.random() * 2 - 1;
                         break;

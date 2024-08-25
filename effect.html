@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音声エフェクトメーカー</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        select, button {
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        audio {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>音声エフェクトメーカー</h1>
+    <input type="file" id="audioUpload" accept="audio/*">
+    <select id="effectSelect">
+        <option value="none">エフェクトを選択</option>
+        <option value="windows7">Windows 7 起動音風</option>
+        <option value="soboro">そぼろ風</option>
+        <option value="pulse">パルス風</option>
+    </select>
+    <button id="applyEffect">エフェクトを適用</button>
+    <button id="exportAudio">エクスポート</button>
+
+    <audio id="audioPlayer" controls></audio>
+
+    <script>
+        let audioContext;
+        let audioBuffer;
+        let source;
+        const audioPlayer = document.getElementById('audioPlayer');
+        const audioUpload = document.getElementById('audioUpload');
+        const effectSelect = document.getElementById('effectSelect');
+        const applyEffect = document.getElementById('applyEffect');
+        const exportAudio = document.getElementById('exportAudio');
+
+        audioUpload.addEventListener('change', handleAudioUpload);
+        applyEffect.addEventListener('click', applyAudioEffect);
+        exportAudio.addEventListener('click', exportModifiedAudio);
+
+        function handleAudioUpload(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                initializeAudioContext(arrayBuffer);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function initializeAudioContext(arrayBuffer) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioContext.decodeAudioData(arrayBuffer, function(buffer) {
+                audioBuffer = buffer;
+                playAudioBuffer(buffer);
+            });
+        }
+
+        function playAudioBuffer(buffer) {
+            if (source) source.stop();
+            source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start();
+            audioPlayer.src = URL.createObjectURL(new Blob([buffer]));
+        }
+
+        function applyAudioEffect() {
+            const selectedEffect = effectSelect.value;
+            if (!audioBuffer) {
+                alert('音声ファイルをアップロードしてください。');
+                return;
+            }
+
+            let modifiedBuffer = audioBuffer;
+
+            switch (selectedEffect) {
+                case 'windows7':
+                    modifiedBuffer = applyWindows7Effect(audioBuffer);
+                    break;
+                case 'soboro':
+                    modifiedBuffer = applySoboroEffect(audioBuffer);
+                    break;
+                case 'pulse':
+                    modifiedBuffer = applyPulseEffect(audioBuffer);
+                    break;
+                default:
+                    alert('エフェクトを選択してください。');
+                    return;
+            }
+
+            playAudioBuffer(modifiedBuffer);
+        }
+
+        function applyWindows7Effect(buffer) {
+            const offlineContext = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+            const source = offlineContext.createBufferSource();
+            source.buffer = buffer;
+
+            // 短いエコーを追加する
+            const delay = offlineContext.createDelay();
+            delay.delayTime.value = 0.1; // 100msのディレイ
+            const feedback = offlineContext.createGain();
+            feedback.gain.value = 0.5;
+
+            source.connect(delay);
+            delay.connect(feedback);
+            feedback.connect(delay);
+            feedback.connect(offlineContext.destination);
+
+            source.start(0);
+            return offlineContext.startRendering();
+        }
+
+        function applySoboroEffect(buffer) {
+            const offlineContext = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+            const source = offlineContext.createBufferSource();
+            source.buffer = buffer;
+
+            // 高音域を強調する
+            const highShelf = offlineContext.createBiquadFilter();
+            highShelf.type = "highshelf";
+            highShelf.frequency.value = 3000; // 3kHzから上の周波数を強調
+            highShelf.gain.value = 10;
+
+            source.connect(highShelf);
+            highShelf.connect(offlineContext.destination);
+
+            source.start(0);
+            return offlineContext.startRendering();
+        }
+
+        function applyPulseEffect(buffer) {
+            const offlineContext = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+            const source = offlineContext.createBufferSource();
+            source.buffer = buffer;
+
+            // LFOでボリュームを変化させる
+            const gainNode = offlineContext.createGain();
+            const lfo = offlineContext.createOscillator();
+            lfo.frequency.value = 5; // 5HzのLFO
+
+            lfo.connect(gainNode.gain);
+            source.connect(gainNode);
+            gainNode.connect(offlineContext.destination);
+
+            lfo.start();
+            source.start(0);
+            return offlineContext.startRendering();
+        }
+
+        function exportModifiedAudio() {
+            if (!audioBuffer) {
+                alert('音声ファイルをアップロードしてください。');
+                return;
+            }
+
+            const blob = new Blob([audioBuffer], { type: 'audio/wav' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'modified_audio.wav';
+            link.click();
+        }
+    </script>
+
+</body>
+</html>

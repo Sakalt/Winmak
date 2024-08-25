@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カスタム効果音メーカー</title>
+    <style>
+        .sound-item { margin-bottom: 10px; }
+        .controls { margin-top: 20px; }
+        .syllable-controls { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>カスタム効果音メーカー</h1>
+
+    <!-- 音節の作成と管理セクション -->
+    <div id="syllable-section">
+        <h2>音節</h2>
+        <select id="syllable-list"></select>
+        <button id="add-syllable">音節を追加</button>
+    </div>
+
+    <!-- 音節の編集セクション -->
+    <div id="syllable-editor" class="syllable-controls">
+        <h2>音節の編集</h2>
+        <div>
+            <label for="wave-type">波形の種類:</label>
+            <select id="wave-type">
+                <option value="sine">正弦波</option>
+                <option value="square">矩形波</option>
+                <option value="triangle">三角波</option>
+                <option value="sawtooth">鋸波</option>
+                <option value="soboro">そぼろ波</option>
+                <option value="hito">人音</option>
+                <option value="choir">合唱団</option>
+                <option value="sword">剣振波</option>
+                <option value="win7">win7エラー波</option>
+                <option value="tada">tada波</option>
+                <option value="mac">macOS起動音波</option>
+                <option value="guitar-basic">基本ギター</option>
+                <option value="guitar-strumming">ギターのストローク</option>
+                <option value="guitar-harmonic">ギターのハーモニクス</option>
+                <option value="piano-normal">通常のピアノ</option>
+                <option value="piano-pedal">ピアノのペダル</option>
+                <option value="drum-kick">バスドラム</option>
+                <option value="drum-snare">スネアドラム</option>
+                <option value="drum-hi-hat">ハイハット</option>
+                <option value="fireworks">花火音</option>
+                <option value="soviet-anthem">ソ連国歌デーン音</option>
+            </select>
+        </div>
+        <div>
+            <label for="frequency">周波数（ヘルツ）:</label>
+            <input type="number" id="frequency" value="440" min="20" max="20000">
+        </div>
+        <div>
+            <label for="duration">長さ（秒）:</label>
+            <input type="number" id="duration" value="1" min="0.1" step="0.1">
+        </div>
+        <div>
+            <label for="fade-in">フェードイン（秒）:</label>
+            <input type="number" id="fade-in" value="0" min="0" step="0.1">
+        </div>
+        <div>
+            <label for="fade-out">フェードアウト（秒）:</label>
+            <input type="number" id="fade-out" value="0" min="0" step="0.1">
+        </div>
+        <div>
+            <label for="tremolo-depth">揺れの深さ:</label>
+            <input type="number" id="tremolo-depth" value="0" min="0" max="1" step="0.01">
+        </div>
+        <div>
+            <label for="tremolo-rate">揺れの速さ（Hz）:</label>
+            <input type="number" id="tremolo-rate" value="5" min="0.1" step="0.1">
+        </div>
+        <button id="update-syllable">音節を更新</button>
+    </div>
+
+    <!-- ノイズ追加セクション -->
+    <div id="noise-section">
+        <h2>ノイズ</h2>
+        <label for="noise-type">ノイズの種類:</label>
+        <select id="noise-type">
+            <option value="white">ホワイトノイズ</option>
+            <option value="pink">ピンクノイズ</option>
+        </select>
+        <button id="add-noise">ノイズを追加</button>
+    </div>
+
+    <!-- 追加楽器音セクション -->
+    <div id="instrument-section">
+        <h2>楽器音</h2>
+        <label for="instrument-type">楽器の種類:</label>
+        <select id="instrument-type">
+            <option value="guitar-basic">基本ギター</option>
+            <option value="guitar-strumming">ギターのストローク</option>
+            <option value="guitar-harmonic">ギターのハーモニクス</option>
+            <option value="piano-normal">通常のピアノ</option>
+            <option value="piano-pedal">ピアノのペダル</option>
+            <option value="drum-kick">バスドラム</option>
+            <option value="drum-snare">スネアドラム</option>
+            <option value="drum-hi-hat">ハイハット</option>
+        </select>
+        <button id="add-instrument">楽器音を追加</button>
+    </div>
+
+    <!-- 効果音管理のコントロール -->
+    <div class="controls">
+        <button id="play">再生</button>
+        <button id="save">保存</button>
+        <button id="load">読み込み</button>
+        <button id="export">WAVとしてエクスポート</button>
+    </div>
+
+    <!-- 音声出力 -->
+    <audio id="audio" controls></audio>
+
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let syllables = [];
+        let currentSyllableIndex = -1;
+
+        // 音節を追加する関数
+        document.getElementById('add-syllable').addEventListener('click', () => {
+            const syllable = {
+                waveType: 'sine',
+                frequency: 440,
+                duration: 1,
+                fadeIn: 0,
+                fadeOut: 0,
+                tremoloDepth: 0,
+                tremoloRate: 5,
+                buffer: createWave('sine', 440, 1, 0, 0, 0, 5)
+            };
+            syllables.push(syllable);
+            currentSyllableIndex = syllables.length - 1;
+            updateSyllableList();
+            updateSyllableEditor();
+        });
+
+        // 音節のリストを更新する関数
+        function updateSyllableList() {
+            const syllableList = document.getElementById('syllable-list');
+            syllableList.innerHTML = '';
+            syllables.forEach((syllable, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `音節 ${index + 1}`;
+                syllableList.appendChild(option);
+            });
+            syllableList.addEventListener('change', (e) => {
+                currentSyllableIndex = e.target.value;
+                updateSyllableEditor();
+            });
+        }
+
+        // 音節の編集フォームを更新する関数
+        function updateSyllableEditor() {
+            const syllable = syllables[currentSyllableIndex];
+            document.getElementById('wave-type').value = syllable.waveType;
+            document.getElementById('frequency').value = syllable.frequency;
+            document.getElementById('duration').value = syllable.duration;
+            document.getElementById('fade-in').value = syllable.fadeIn;
+            document.getElementById('fade-out').value = syllable.fadeOut;
+            document.getElementById('tremolo-depth').value = syllable.tremoloDepth;
+            document.getElementById('tremolo-rate').value = syllable.tremoloRate;
+        }
+
+        // 音節を更新する関数
+        document.getElementById('update-syllable').addEventListener('click', () => {
+            if (currentSyllableIndex >= 0) {
+                const waveType = document.getElementById('wave-type').value;
+                const frequency = parseFloat(document.getElementById('frequency').value);
+                const duration = parseFloat(document.getElementById('duration').value);
+                const fadeIn = parseFloat(document.getElementById('fade-in').value);
+                const fadeOut = parseFloat(document.getElementById('fade-out').value);
+                const tremoloDepth = parseFloat(document.getElementById('tremolo-depth').value);
+                const tremoloRate = parseFloat(document.getElementById('tremolo-rate').value);
+
+                syllables[currentSyllableIndex] = {
+                    waveType,
+                    frequency,
+                    duration,
+                    fadeIn,
+                    fadeOut,
+                    tremoloDepth,
+                    tremoloRate,
+                    buffer: createWave(waveType, frequency, duration, fadeIn, fadeOut, tremoloDepth, tremoloRate)
+                };
+            }
+        });
+
+        // 音声を作成する関数
+        function createWave(waveType, frequency, duration, fadeIn, fadeOut, tremoloDepth, tremoloRate) {
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
+            const data = buffer.getChannelData(0);
+            const totalSamples = data.length;
+            const fadeInSamples = Math.floor(fadeIn * sampleRate);
+            const fadeOutSamples = Math.floor(fadeOut * sampleRate);
+
+            for (let i = 0; i < totalSamples; i++) {
+                let t = i / sampleRate;
+                let value = 0;
+
+                // 波形の生成
+                switch (waveType) {
+                    case 'sine':
+                        value = Math.sin(2 * Math.PI * frequency * t);
+                        break;
+                    case 'square':
+                        value = Math.sign(Math.sin(2 * Math.PI * frequency * t));
+                        break;
+                    case 'triangle':
+                        value = 2 * Math.asin(Math.sin(2 * Math.PI * frequency * t)) / Math.PI;
+                        break;
+                    case 'sawtooth':
+                        value = 2 * (t * frequency - Math.floor(t * frequency + 0.5));
+                        break;
+                    case 'soboro':
+                        value = Math.random() * 2 - 1; // ランダムノイズ
+                        break;
+                    case 'hito':
+                        value = (t % 0.1 < 0.05) ? 1 : -1;
+                        break;
+                    case 'choir':
+                        value = 0.5 * (Math.sin(2 * Math.PI * frequency * t) + Math.sin(4 * Math.PI * frequency * t));
+                        break;
+                    case 'sword':
+                        value = Math.sin(2 * Math.PI * frequency * t) * Math.sin(2 * Math.PI * frequency * t);
+                        break;
+                    case 'win7':
+                        value = (t % 0.05 < 0.025) ? 1 : 0;
+                        break;
+                    case 'tada':
+                        value = (t % 0.2 < 0.1) ? 1 : 0;
+                        break;
+                    case 'mac':
+                        value = (t % 0.3 < 0.1) ? Math.sin(2 * Math.PI * frequency * t) : 0;
+                        break;
+                    case 'guitar-basic':
+                        value = Math.sin(2 * Math.PI * frequency * t) * Math.exp(-t / 0.5);
+                        break;
+                    case 'guitar-strumming':
+                        value = (Math.sin(2 * Math.PI * frequency * t) * Math.exp(-t / 0.1));
+                        break;
+                    case 'guitar-harmonic':
+                        value = Math.sin(2 * Math.PI * frequency * t) * Math.sin(2 * Math.PI * 3 * frequency * t);
+                        break;
+                    case 'piano-normal':
+                        value = Math.sin(2 * Math.PI * frequency * t) * Math.exp(-t / 0.2);
+                        break;
+                    case 'piano-pedal':
+                        value = Math.sin(2 * Math.PI * frequency * t) * Math.exp(-t / 0.3);
+                        break;
+                    case 'drum-kick':
+                        value = (t < 0.05) ? 1 - t * 20 : 0;
+                        break;
+                    case 'drum-snare':
+                        value = (Math.random() * 2 - 1) * Math.exp(-t * 10);
+                        break;
+                    case 'drum-hi-hat':
+                        value = (t % 0.1 < 0.05) ? 1 : 0;
+                        break;
+                    case 'fireworks':
+                        value = (Math.random() * 2 - 1) * Math.exp(-t * 5);
+                        break;
+                    case 'soviet-anthem':
+                        value = Math.sin(2 * Math.PI * frequency * t) * (1 - Math.exp(-t * 1));
+                        break;
+                }
+
+                // 揺れの追加
+                if (tremoloDepth > 0) {
+                    const tremolo = 1 + tremoloDepth * Math.sin(2 * Math.PI * tremoloRate * t);
+                    value *= tremolo;
+                }
+
+                // フェードイン
+                if (i < fadeInSamples) {
+                    value *= i / fadeInSamples;
+                }
+
+                // フェードアウト
+                if (i >= totalSamples - fadeOutSamples) {
+                    value *= (totalSamples - i) / fadeOutSamples;
+                }
+
+                data[i] = value;
+            }
+
+            return buffer;
+        }
+
+        // ノイズを追加する関数
+        document.getElementById('add-noise').addEventListener('click', () => {
+            const noiseType = document.getElementById('noise-type').value;
+            const noiseBuffer = createNoise(noiseType);
+            syllables.push({
+                waveType: 'noise',
+                frequency: 0,
+                duration: 1,
+                fadeIn: 0,
+                fadeOut: 0,
+                tremoloDepth: 0,
+                tremoloRate: 0,
+                buffer: noiseBuffer
+            });
+            updateSyllableList();
+        });
+
+        // 楽器音を追加する関数
+        document.getElementById('add-instrument').addEventListener('click', () => {
+            const instrumentType = document.getElementById('instrument-type').value;
+            const instrumentBuffer = createInstrument(instrumentType);
+            syllables.push({
+                waveType: 'instrument',
+                frequency: 0,
+                duration: 1,
+                fadeIn: 0,
+                fadeOut: 0,
+                tremoloDepth: 0,
+                tremoloRate: 0,
+                buffer: instrumentBuffer
+            });
+            updateSyllableList();
+        });
+
+        // ノイズを作成する関数
+        function createNoise(type) {
+            const sampleRate = audioContext.sampleRate;
+            const duration = 1; // ノイズの長さは1秒
+            const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < data.length; i++) {
+                if (type === 'white') {
+                    data[i] = Math.random() * 2 - 1;
+                } else if (type === 'pink') {
+                    let white = 0;
+                    let pink = 0;
+                    for (let j = 0; j < 10; j++) {
+                        white = Math.random() * 2 - 1;
+                        pink += (white - pink) * 0.1;
+                    }
+                    data[i] = pink;
+                }
+            }
+
+            return buffer;
+        }
+
+        // 楽器音を作成する関数
+        function createInstrument(type) {
+            const sampleRate = audioContext.sampleRate;
+            const duration = 1; // 楽器音の長さは1秒
+            const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
+            const data = buffer.getChannelData(0);
+            const frequency = 440; // 基本周波数
+
+            for (let i = 0; i < data.length; i++) {
+                const t = i / sampleRate;
+
+                switch (type) {
+                    case 'guitar-basic':
+                        data[i] = Math.sin(2 * Math.PI * frequency * t) * Math.exp(-t / 0.5);
+                        break;
+                    case 'guitar-strumming':
+                        data[i] = (Math.sin(2 * Math.PI * frequency * t) * Math.exp(-t / 0.1));
+                        break;
+                    case 'guitar-harmonic':
+                        data[i] = Math.sin(2 * Math.PI * frequency * t) * Math.sin(2 * Math.PI * 3 * frequency * t);
+                        break;
+                    case 'piano-normal':
+                        data[i] = Math.sin(2 * Math.PI * frequency * t) * Math.exp(-t / 0.2);
+                        break;
+                    case 'piano-pedal':
+                        data[i] = Math.sin(2 * Math.PI * frequency * t) * Math.exp(-t / 0.3);
+                        break;
+                    case 'drum-kick':
+                        data[i] = (t < 0.05) ? 1 - t * 20 : 0;
+                        break;
+                    case 'drum-snare':
+                        data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 10);
+                        break;
+                    case 'drum-hi-hat':
+                        data[i] = (t % 0.1 < 0.05) ? 1 : 0;
+                        break;
+                    case 'fireworks':
+                        data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 5);
+                        break;
+                    case 'soviet-anthem':
+                        data[i] = Math.sin(2 * Math.PI * frequency * t) * (1 - Math.exp(-t * 1));
+                        break;
+                }
+            }
+
+            return buffer;
+        }
+
+        // 音声を再生する関数
+        function playSound() {
+            const source = audioContext.createBufferSource();
+            const concatenatedBuffer = audioContext.createBuffer(1, syllables.reduce((sum, s) => sum + (audioContext.sampleRate * s.duration), 0), audioContext.sampleRate);
+            const output = concatenatedBuffer.getChannelData(0);
+
+            let offset = 0;
+            syllables.forEach(syllable => {
+                const buffer = syllable.buffer.getChannelData(0);
+                for (let i = 0; i < buffer.length; i++) {
+                    output[offset + i] = buffer[i];
+                }
+                offset += buffer.length;
+            });
+
+            source.buffer = concatenatedBuffer;
+            source.connect(audioContext.destination);
+            source.start();
+        }
+
+        // 音声リストを更新する関数
+        function updateSyllableList() {
+            const syllableList = document.getElementById('syllable-list');
+            syllableList.innerHTML = '';
+            syllables.forEach((syllable, index) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `Syllable ${index + 1}`;
+                syllableList.appendChild(listItem);
+            });
+        }
+
+        // 音声を削除する関数
+        document.getElementById('delete-syllable').addEventListener('click', () => {
+            if (currentSyllableIndex >= 0) {
+                syllables.splice(currentSyllableIndex, 1);
+                currentSyllableIndex = -1;
+                updateSyllableList();
+            }
+        });
+
+        // 音声を選択する関数
+        document.getElementById('syllable-list').addEventListener('click', (event) => {
+            if (event.target.tagName === 'LI') {
+                currentSyllableIndex = Array.from(event.target.parentElement.children).indexOf(event.target);
+            }
+        });
+
+    </script>
+</body>
+</html>

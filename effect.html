@@ -108,15 +108,17 @@
                 return;
             }
 
+            const duration = audioBuffer.duration;
+
             switch (selectedEffect) {
                 case 'windows7':
-                    modifiedBuffer = applyWindows7Effect(audioBuffer, selectedWaveform);
+                    modifiedBuffer = applyWindows7Effect(audioBuffer, selectedWaveform, duration);
                     break;
                 case 'soboro':
-                    modifiedBuffer = applySoboroEffect(audioBuffer, selectedWaveform);
+                    modifiedBuffer = applySoboroEffect(audioBuffer, selectedWaveform, duration);
                     break;
                 case 'pulse':
-                    modifiedBuffer = applyPulseEffect(audioBuffer, selectedWaveform);
+                    modifiedBuffer = applyPulseEffect(audioBuffer, selectedWaveform, duration);
                     break;
                 default:
                     alert('エフェクトを選択してください。');
@@ -126,7 +128,7 @@
             modifiedBuffer.then(playAudioBuffer);
         }
 
-        function applyWaveformEffect(buffer, waveformType) {
+        function applyWaveformEffect(buffer, waveformType, duration) {
             const offlineContext = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
             const source = offlineContext.createBufferSource();
             source.buffer = buffer;
@@ -146,19 +148,22 @@
             oscillator.start();
             source.start(0);
 
+            // Set the oscillator's duration to match the audio buffer duration
+            oscillator.stop(offlineContext.currentTime + duration);
+
             return offlineContext.startRendering();
         }
 
-        function applyWindows7Effect(buffer, waveform) {
-            return applyWaveformEffect(buffer, waveform);
+        function applyWindows7Effect(buffer, waveform, duration) {
+            return applyWaveformEffect(buffer, waveform, duration);
         }
 
-        function applySoboroEffect(buffer, waveform) {
-            return applyWaveformEffect(buffer, waveform);
+        function applySoboroEffect(buffer, waveform, duration) {
+            return applyWaveformEffect(buffer, waveform, duration);
         }
 
-        function applyPulseEffect(buffer, waveform) {
-            return applyWaveformEffect(buffer, waveform);
+        function applyPulseEffect(buffer, waveform, duration) {
+            return applyWaveformEffect(buffer, waveform, duration);
         }
 
         function exportModifiedAudio() {

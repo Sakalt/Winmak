@@ -5,207 +5,272 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>音声エフェクトメーカー</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        .controls { margin-top: 20px; }
-        .effects { margin-top: 20px; }
-        .section { margin-bottom: 20px; }
-        button { margin-top: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        select, button {
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        audio {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
     </style>
 </head>
 <body>
+
     <h1>音声エフェクトメーカー</h1>
+    <input type="file" id="audioUpload" accept="audio/*">
+    
+    <label for="waveformSelect">波形を選択:</label>
+    <select id="waveformSelect">
+        <option value="sine">サイン波</option>
+        <option value="sawtooth">ノコギリ波</option>
+        <option value="triangle">三角波</option>
+        <option value="square">矩形波</option>
+    </select>
+    
+    <label for="effectSelect">エフェクトを選択:</label>
+    <select id="effectSelect">
+        <option value="none">エフェクトを選択</option>
+        <option value="windows7">Windows 7 起動音風</option>
+        <option value="soboro">そぼろ風</option>
+        <option value="pulse">パルス風</option>
+    </select>
+    
+    <button id="applyEffect">エフェクトを適用</button>
+    <button id="exportAudio">エクスポート</button>
 
-    <div id="waveform-section" class="section">
-        <h2>波形の選択</h2>
-        <select id="waveform-type">
-            <option value="sine">サイン波</option>
-            <option value="sawtooth">ノコギリ波</option>
-            <option value="triangle">三角波</option>
-            <option value="square">矩形波</option>
-        </select>
-    </div>
-
-    <div id="effect-section" class="effects section">
-        <h2>エフェクトの選択</h2>
-        <select id="effect-type">
-            <option value="windows7">Windows 7</option>
-            <option value="soboro">そぼろ風</option>
-            <option value="pulse">パルス風</option>
-            <option value="windows11">Windows 11</option>
-        </select>
-        <button id="apply-effect">エフェクトを適用</button>
-    </div>
-
-    <div id="controls" class="controls section">
-        <button id="play">再生</button>
-        <button id="export">WAVとしてエクスポート</button>
-    </div>
-
-    <audio id="audio" controls></audio>
+    <audio id="audioPlayer" controls></audio>
 
     <script>
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let buffer;
+        let audioContext;
+        let audioBuffer;
+        let modifiedBuffer;
+        let source;
+        const audioPlayer = document.getElementById('audioPlayer');
+        const audioUpload = document.getElementById('audioUpload');
+        const effectSelect = document.getElementById('effectSelect');
+        const waveformSelect = document.getElementById('waveformSelect');
+        const applyEffect = document.getElementById('applyEffect');
+        const exportAudio = document.getElementById('exportAudio');
 
-        function createWaveformBuffer(waveform, frequency, duration) {
-            const sampleRate = audioContext.sampleRate;
-            const length = sampleRate * duration;
-            const audioBuffer = audioContext.createBuffer(1, length, sampleRate);
-            const data = audioBuffer.getChannelData(0);
+        audioUpload.addEventListener('change', handleAudioUpload);
+        applyEffect.addEventListener('click', applyAudioEffect);
+        exportAudio.addEventListener('click', exportModifiedAudio);
 
-            for (let i = 0; i < length; i++) {
-                const t = i / sampleRate;
-                switch (waveform) {
-                    case 'sine':
-                        data[i] = Math.sin(2 * Math.PI * frequency * t);
-                        break;
-                    case 'sawtooth':
-                        data[i] = (2 * (t * frequency - Math.floor(t * frequency + 0.5))) - 1;
-                        break;
-                    case 'triangle':
-                        data[i] = 1 - (4 * Math.abs(Math.round(t * frequency) - (t * frequency + 0.5)));
-                        break;
-                    case 'square':
-                        data[i] = Math.sign(Math.sin(2 * Math.PI * frequency * t));
-                        break;
-                }
-            }
-            return audioBuffer;
+        function handleAudioUpload(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                initializeAudioContext(arrayBuffer);
+            };
+            reader.readAsArrayBuffer(file);
         }
 
-        function applyEffect(effectType, audioBuffer) {
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            const gainNode = audioContext.createGain();
-            const biquadFilter = audioContext.createBiquadFilter();
-            const convolver = audioContext.createConvolver();
-            let effectBuffer;
+        function initializeAudioContext(arrayBuffer) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioContext.decodeAudioData(arrayBuffer, function(buffer) {
+                audioBuffer = buffer;
+                playAudioBuffer(buffer);
+            });
+        }
 
-            switch (effectType) {
+        function playAudioBuffer(buffer) {
+            if (source) source.stop();
+            source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            source.start();
+            audioPlayer.src = URL.createObjectURL(new Blob([bufferToWave(buffer)]));
+        }
+
+        function applyAudioEffect() {
+            const selectedEffect = effectSelect.value;
+            const selectedWaveform = waveformSelect.value;
+
+            if (!audioBuffer) {
+                alert('音声ファイルをアップロードしてください。');
+                return;
+            }
+
+            switch (selectedEffect) {
                 case 'windows7':
-                    // Apply Windows 7 effect
-                    effectBuffer = createWaveformBuffer('sine', 440, 1);
-                    biquadFilter.type = 'lowpass';
-                    biquadFilter.frequency.setValueAtTime(2000, audioContext.currentTime);
+                    modifiedBuffer = applyWindows7Effect(audioBuffer, selectedWaveform);
                     break;
                 case 'soboro':
-                    // Apply Soboro effect
-                    effectBuffer = createWaveformBuffer('sine', 440, 1);
-                    biquadFilter.type = 'highpass';
-                    biquadFilter.frequency.setValueAtTime(1000, audioContext.currentTime);
+                    modifiedBuffer = applySoboroEffect(audioBuffer, selectedWaveform);
                     break;
                 case 'pulse':
-                    // Apply Pulse effect
-                    effectBuffer = createWaveformBuffer('sine', 440, 1);
-                    biquadFilter.type = 'bandpass';
-                    biquadFilter.frequency.setValueAtTime(1000, audioContext.currentTime);
-                    break;
-                case 'windows11':
-                    // Apply Windows 11 effect
-                    effectBuffer = createWaveformBuffer('sine', 440, 1);
-                    biquadFilter.type = 'peaking';
-                    biquadFilter.frequency.setValueAtTime(5000, audioContext.currentTime);
-                    biquadFilter.gain.setValueAtTime(10, audioContext.currentTime);
+                    modifiedBuffer = applyPulseEffect(audioBuffer, selectedWaveform);
                     break;
                 default:
-                    effectBuffer = audioBuffer;
+                    alert('エフェクトを選択してください。');
+                    return;
             }
 
-            convolver.buffer = effectBuffer;
-            source.connect(biquadFilter);
-            biquadFilter.connect(convolver);
-            convolver.connect(audioContext.destination);
-            return convolver;
+            modifiedBuffer.then(playAudioBuffer);
         }
 
-        document.getElementById('apply-effect').addEventListener('click', () => {
-            const effectType = document.getElementById('effect-type').value;
-            const waveformType = document.getElementById('waveform-type').value;
-            const frequency = 440; // Example frequency
-            const duration = 2; // Example duration
-            const originalBuffer = createWaveformBuffer(waveformType, frequency, duration);
+        function applyWindows7Effect(buffer, waveform) {
+            const offlineContext = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+            const source = offlineContext.createBufferSource();
+            source.buffer = buffer;
 
-            const effect = applyEffect(effectType, originalBuffer);
-            effect.start();
-        });
+            const delay = offlineContext.createDelay();
+            delay.delayTime.value = 0.1;
+            const feedback = offlineContext.createGain();
+            feedback.gain.value = 0.5;
 
-        document.getElementById('play').addEventListener('click', () => {
-            const effectType = document.getElementById('effect-type').value;
-            const waveformType = document.getElementById('waveform-type').value;
-            const frequency = 440; // Example frequency
-            const duration = 2; // Example duration
-            const audioBuffer = createWaveformBuffer(waveformType, frequency, duration);
-            const effect = applyEffect(effectType, audioBuffer);
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(effect);
-            source.start();
-        });
+            source.connect(delay);
+            delay.connect(feedback);
+            feedback.connect(delay);
+            feedback.connect(offlineContext.destination);
 
-        document.getElementById('export').addEventListener('click', () => {
-            const effectType = document.getElementById('effect-type').value;
-            const waveformType = document.getElementById('waveform-type').value;
-            const frequency = 440; // Example frequency
-            const duration = 2; // Example duration
-            const audioBuffer = createWaveformBuffer(waveformType, frequency, duration);
-            const effect = applyEffect(effectType, audioBuffer);
-            effect.connect(audioContext.destination);
+            const waveEffect = offlineContext.createOscillator();
+            waveEffect.type = waveform;
+            waveEffect.frequency.setValueAtTime(440, offlineContext.currentTime); // A4 note
+            waveEffect.connect(feedback);
 
-            const wav = audioBufferToWav(audioBuffer);
-            const blob = new Blob([wav], { type: 'audio/wav' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'effect.wav';
-            a.click();
-            URL.revokeObjectURL(url);
-        });
+            waveEffect.start();
+            source.start(0);
+            return offlineContext.startRendering();
+        }
 
-        function audioBufferToWav(audioBuffer) {
-            const numChannels = audioBuffer.numberOfChannels;
-            const sampleRate = audioBuffer.sampleRate;
-            const length = audioBuffer.length * numChannels * 2 + 44;
-            const buffer = new ArrayBuffer(length);
-            const view = new DataView(buffer);
+        function applySoboroEffect(buffer, waveform) {
+            const offlineContext = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+            const source = offlineContext.createBufferSource();
+            source.buffer = buffer;
 
-            writeString(view, 0, 'RIFF');
-            view.setUint32(4, length - 8, true);
-            writeString(view, 8, 'WAVE');
+            const highShelf = offlineContext.createBiquadFilter();
+            highShelf.type = "highshelf";
+            highShelf.frequency.value = 3000;
+            highShelf.gain.value = 10;
 
-            writeString(view, 12, 'fmt ');
-            view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true);
-            view.setUint16(22, numChannels, true);
-            view.setUint32(24, sampleRate, true);
-            view.setUint32(28, sampleRate * numChannels * 2, true);
-            view.setUint16(32, numChannels * 2, true);
-            view.setUint16(34, 16, true);
+            source.connect(highShelf);
+            highShelf.connect(offlineContext.destination);
 
-            writeString(view, 36, 'data');
-            view.setUint32(40, audioBuffer.length * numChannels * 2, true);
+            const waveEffect = offlineContext.createOscillator();
+            waveEffect.type = waveform;
+            waveEffect.frequency.setValueAtTime(440, offlineContext.currentTime); // A4 note
+            waveEffect.connect(offlineContext.destination);
 
-            const channelData = new Float32Array(audioBuffer.length * numChannels);
-            for (let i = 0; i < numChannels; i++) {
-                const data = audioBuffer.getChannelData(i);
-                for (let j = 0; j < data.length; j++) {
-                    channelData[j * numChannels + i] = data[j];
+            waveEffect.start();
+            source.start(0);
+            return offlineContext.startRendering();
+        }
+
+        function applyPulseEffect(buffer, waveform) {
+            const offlineContext = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+            const source = offlineContext.createBufferSource();
+            source.buffer = buffer;
+
+            const gainNode = offlineContext.createGain();
+            const lfo = offlineContext.createOscillator();
+            lfo.frequency.value = 5;
+
+            lfo.connect(gainNode.gain);
+            source.connect(gainNode);
+            gainNode.connect(offlineContext.destination);
+
+            const waveEffect = offlineContext.createOscillator();
+            waveEffect.type = waveform;
+            waveEffect.frequency.setValueAtTime(440, offlineContext.currentTime); // A4 note
+            waveEffect.connect(offlineContext.destination);
+
+            waveEffect.start();
+            lfo.start();
+            source.start(0);
+            return offlineContext.startRendering();
+        }
+
+        function exportModifiedAudio() {
+            if (!modifiedBuffer) {
+                alert('エフェクトを適用してからエクスポートしてください。');
+                return;
+            }
+
+            modifiedBuffer.then(buffer => {
+                const wavData = audioBufferToWav(buffer);
+                const blob = new Blob([wavData], { type: 'audio/wav' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'modified_audio.wav';
+                link.click();
+            });
+        }
+
+        function audioBufferToWav(buffer) {
+            const numOfChan = buffer.numberOfChannels,
+                length = buffer.length * numOfChan * 2 + 44,
+                bufferArray = new ArrayBuffer(length),
+                view = new DataView(bufferArray),
+                channels = [],
+                sampleRate = buffer.sampleRate,
+                offset = 0,
+                pos = 0;
+
+            // write WAV header
+            setUint32(0x46464952); // "RIFF"
+            setUint32(length - 8); // file length - 8
+            setUint32(0x45564157); // "WAVE"
+
+            setUint32(0x20746d66); // "fmt " chunk
+            setUint32(16); // length = 16
+            setUint16(1); // PCM (uncompressed)
+            setUint16(numOfChan);
+            setUint32(sampleRate);
+            setUint32(sampleRate * 2 * numOfChan); // avg. bytes/sec
+            setUint16(numOfChan * 2); // block-align
+            setUint16(16); // 16-bit (hardcoded in this demo)
+
+            setUint32(0x61746164); // "data" - chunk
+            setUint32(length - pos - 4); // chunk length
+
+            // write interleaved data
+            for (let i = 0; i < numOfChan; i++) {
+                channels.push(buffer.getChannelData(i));
+            }
+
+            for (let i = 0; i < buffer.length; i++) {
+                for (let chan = 0; chan < numOfChan; chan++) {
+                    const sample = Math.max(-1, Math.min(1, channels[chan][i]));
+                    setInt16(sample < 0 ? sample * 0x8000 : sample * 0x7FFF);
                 }
             }
 
-            let offset = 44;
-            for (let i = 0; i < channelData.length; i++) {
-                view.setInt16(offset, channelData[i] * 0x7FFF, true);
-                offset += 2;
+            return view;
+
+            function setUint16(data) {
+                view.setUint16(pos, data, true);
+                pos += 2;
             }
 
-            return buffer;
-        }
+            function setUint32(data) {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            }
 
-        function writeString(view, offset, string) {
-            for (let i = 0; i < string.length; i++) {
-                view.setUint8(offset + i, string.charCodeAt(i));
+            function setInt16(data) {
+                view.setInt16(pos, data, true);
+                pos += 2;
             }
         }
     </script>
+
 </body>
 </html>

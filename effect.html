@@ -126,76 +126,39 @@
             modifiedBuffer.then(playAudioBuffer);
         }
 
-        function applyWindows7Effect(buffer, waveform) {
+        function applyWaveformEffect(buffer, waveformType) {
             const offlineContext = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
             const source = offlineContext.createBufferSource();
             source.buffer = buffer;
 
-            const delay = offlineContext.createDelay();
-            delay.delayTime.value = 0.1;
-            const feedback = offlineContext.createGain();
-            feedback.gain.value = 0.5;
+            // Create waveform oscillator
+            const oscillator = offlineContext.createOscillator();
+            oscillator.type = waveformType;
+            oscillator.frequency.setValueAtTime(5, offlineContext.currentTime); // Adjust frequency as needed
+            oscillator.connect(offlineContext.destination);
 
-            source.connect(delay);
-            delay.connect(feedback);
-            feedback.connect(delay);
-            feedback.connect(offlineContext.destination);
-
-            const waveEffect = offlineContext.createOscillator();
-            waveEffect.type = waveform;
-            waveEffect.frequency.setValueAtTime(440, offlineContext.currentTime); // A4 note
-            waveEffect.connect(feedback);
-
-            waveEffect.start();
-            source.start(0);
-            return offlineContext.startRendering();
-        }
-
-        function applySoboroEffect(buffer, waveform) {
-            const offlineContext = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
-            const source = offlineContext.createBufferSource();
-            source.buffer = buffer;
-
-            const highShelf = offlineContext.createBiquadFilter();
-            highShelf.type = "highshelf";
-            highShelf.frequency.value = 3000;
-            highShelf.gain.value = 10;
-
-            source.connect(highShelf);
-            highShelf.connect(offlineContext.destination);
-
-            const waveEffect = offlineContext.createOscillator();
-            waveEffect.type = waveform;
-            waveEffect.frequency.setValueAtTime(440, offlineContext.currentTime); // A4 note
-            waveEffect.connect(offlineContext.destination);
-
-            waveEffect.start();
-            source.start(0);
-            return offlineContext.startRendering();
-        }
-
-        function applyPulseEffect(buffer, waveform) {
-            const offlineContext = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
-            const source = offlineContext.createBufferSource();
-            source.buffer = buffer;
-
+            // Modulate the audio buffer with the waveform oscillator
             const gainNode = offlineContext.createGain();
-            const lfo = offlineContext.createOscillator();
-            lfo.frequency.value = 5;
-
-            lfo.connect(gainNode.gain);
+            gainNode.gain.setValueAtTime(0.5, offlineContext.currentTime); // Adjust gain as needed
             source.connect(gainNode);
             gainNode.connect(offlineContext.destination);
 
-            const waveEffect = offlineContext.createOscillator();
-            waveEffect.type = waveform;
-            waveEffect.frequency.setValueAtTime(440, offlineContext.currentTime); // A4 note
-            waveEffect.connect(offlineContext.destination);
-
-            waveEffect.start();
-            lfo.start();
+            oscillator.start();
             source.start(0);
+
             return offlineContext.startRendering();
+        }
+
+        function applyWindows7Effect(buffer, waveform) {
+            return applyWaveformEffect(buffer, waveform);
+        }
+
+        function applySoboroEffect(buffer, waveform) {
+            return applyWaveformEffect(buffer, waveform);
+        }
+
+        function applyPulseEffect(buffer, waveform) {
+            return applyWaveformEffect(buffer, waveform);
         }
 
         function exportModifiedAudio() {
@@ -241,14 +204,10 @@
             setUint32(0x61746164); // "data" - chunk
             setUint32(length - pos - 4); // chunk length
 
-            // write interleaved data
-            for (let i = 0; i < numOfChan; i++) {
-                channels.push(buffer.getChannelData(i));
-            }
-
+            // write audio samples
             for (let i = 0; i < buffer.length; i++) {
                 for (let chan = 0; chan < numOfChan; chan++) {
-                    const sample = Math.max(-1, Math.min(1, channels[chan][i]));
+                    const sample = Math.max(-1, Math.min(1, buffer.getChannelData(chan)[i]));
                     setInt16(sample < 0 ? sample * 0x8000 : sample * 0x7FFF);
                 }
             }

@@ -58,6 +58,9 @@
                 <option value="wind">風</option>
                 <option value="waterDrop">水</option>
                 <option value="thunder">雷</option>
+                <option value="grass">草</option>
+                <option value="magma">マグマ</option>
+                <option value="ice">氷</option>
             </select>
         </div>
         <div>
@@ -460,6 +463,23 @@
                         const thunderFrequency = 50; // 低周波数の雷音
                         const thunderEnvelope = Math.exp(-time * 1); // ゆっくり減衰
                         value = thunderEnvelope * ((Math.random() * 2 - 1) + Math.sin(2 * Math.PI * thunderFrequency * time) * 0.5); // 雷音のノイズと共鳴
+                        break;
+                    case 'grass':
+                        const grassFrequency = 500; // 高周波数の草音
+                        const grassEnvelope = Math.exp(-time * 2); // ゆっくり減衰
+                        value = grassEnvelope * (Math.sin(2 * Math.PI * grassFrequency * time) * Math.random() * 0.2); // 草のささやき音
+                        break;
+
+                    case 'magma':
+                        const magmaFrequency = 80; // 低周波数のマグマ音
+                        const magmaEnvelope = Math.exp(-time * 1); // 中程度の減衰
+                        value = magmaEnvelope * (Math.sin(2 * Math.PI * magmaFrequency * time) + Math.random() * 0.5); // マグマのうねり音
+                        break;
+
+                    case 'ice':
+                        const iceFrequency = 1000; // 高周波数の氷音
+                        const iceEnvelope = Math.exp(-time * 3); // ゆっくり減衰
+                        value = iceEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * iceFrequency * time); // 氷のひび割れ音
                         break;
                 }
 

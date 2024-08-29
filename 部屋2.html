@@ -55,6 +55,9 @@
                 <option value="steelDrum">スチールドラム</option>
                 <option value="gunShot">銃声</option>
                 <option value="titanium">チタン</option>
+                <option value="wind">風</option>
+                <option value="waterDrop">水</option>
+                <option value="thunder">雷</option>
             </select>
         </div>
         <div>
@@ -440,6 +443,23 @@
                         const titaniumFrequency = 600; // 高周波の金属音
                         const titaniumEnvelope = Math.exp(-time * 5); // 急激に減衰する
                         value = titaniumEnvelope * (Math.sin(2 * Math.PI * titaniumFrequency * time) + Math.sin(2 * Math.PI * time * 0.5) * 0.3); // 金属的な共鳴音
+                        break;
+                    case 'wind':
+                        const windFrequency = 200; // 低周波数の風音
+                        const windEnvelope = Math.exp(-time * 0.5); // ゆっくり減衰
+                        value = windEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * windFrequency * time); // 風音のランダムなノイズ
+                        break;
+
+                    case 'waterDrop':
+                        const waterDropLength = 0.1; // 短い水滴音の長さ
+                        const waterDropEnvelope = Math.max(0, 1 - (time / waterDropLength)); // 急速に減衰
+                        value = waterDropEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * frequency * time); // 水滴音のノイズ
+                        break;
+
+                    case 'thunder':
+                        const thunderFrequency = 50; // 低周波数の雷音
+                        const thunderEnvelope = Math.exp(-time * 1); // ゆっくり減衰
+                        value = thunderEnvelope * ((Math.random() * 2 - 1) + Math.sin(2 * Math.PI * thunderFrequency * time) * 0.5); // 雷音のノイズと共鳴
                         break;
                 }
 

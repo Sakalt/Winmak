@@ -2,6 +2,8 @@ https://sakalt.github.io/Winmak/V2.html
 https://sakalt.github.io/Winmak/部屋2.html
 https://sakalt.github.io/Winmak/Debug.html
 https://sakalt.github.io/Winmak/Debug2.html
+https://sakalt.github.io/Winmak/3.html
+
 [effect](https://sakalt.github.io/Winmak/effect.html)
 目安
 正弦波 

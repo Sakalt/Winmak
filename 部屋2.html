@@ -61,6 +61,10 @@
                 <option value="grass">草</option>
                 <option value="magma">マグマ</option>
                 <option value="ice">氷</option>
+                <option value="wood">木材</option>
+                <option value="thunder2">雷2</option>
+                <option value="triangleDing">三角へこみ</option>
+                <option value="realwaterdrop">水滴2</option>
             </select>
         </div>
         <div>
@@ -453,7 +457,7 @@
                         value = windEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * windFrequency * time); // 風音のランダムなノイズ
                         break;
 
-                    case 'waterDrop':
+                    case 'realwaterdrop':
                         const waterDropLength = 0.1; // 短い水滴音の長さ
                         const waterDropEnvelope = Math.max(0, 1 - (time / waterDropLength)); // 急速に減衰
                         value = waterDropEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * frequency * time); // 水滴音のノイズ
@@ -481,6 +485,35 @@
                         const iceEnvelope = Math.exp(-time * 3); // ゆっくり減衰
                         value = iceEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * iceFrequency * time); // 氷のひび割れ音
                         break;
+                    case 'wood':
+                        const woodFrequency = 200; // 木材の音に合った中低周波数
+                        const woodEnvelope = Math.exp(-time * 1.5); // ゆっくり減衰
+                        value = woodEnvelope * (Math.sin(2 * Math.PI * woodFrequency * time) * (Math.random() * 0.4 + 0.6)); // 木材の打撃音
+                        break;
+
+                    case 'thunder2':
+                        const thunder2Frequency = frequency * 0.5; // ギターの音を低くした雷の音
+                        const thunder2Envelope = Math.exp(-time * 2); // ゆっくり減衰
+                        value = thunder2Envelope * (Math.sin(2 * Math.PI * thunder2Frequency * time) + Math.random() * 0.2); // 雷の轟音
+                        break;
+
+                    case 'triangleDing':
+                        const dingFrequency = 440; // 三角波の基準周波数
+                        const dingDuration = 0.4; // 0.4秒ごとに三角波
+                        const dingPeriod = Math.floor(time / dingDuration) % 2; // 三角波の周期に合わせた切り替え
+                        const triangleWave = (dingPeriod === 0) ? 
+                            (2 * (time % dingDuration) / dingDuration - 1) : 
+                            (2 - 2 * (time % dingDuration) / dingDuration);
+                        const triangleEnvelope = Math.exp(-time * 10); // 急激に減衰
+                        value = triangleEnvelope * triangleWave * 0.5; // 三角へこみ音
+                        break;
+
+                    case 'realWaterDrop':
+                        const waterDropFrequency = 1500; // 高周波数の水滴音
+                        const waterDropEnvelope = Math.exp(-time * 0.1); // 短い減衰
+                        value = waterDropEnvelope * (Math.sin(2 * Math.PI * waterDropFrequency * time) * (Math.random() * 0.5 + 0.5)); // リアルな水滴音
+                        break;
+
                 }
 
                 // フェードインとフェードアウト処理

@@ -64,7 +64,7 @@
                 <option value="wood">木材</option>
                 <option value="thunder2">雷2</option>
                 <option value="triangleDing">三角へこみ</option>
-                <option value="realwaterdrop">水滴2</option>
+                <option value="realWaterDrop">水滴2</option>
             </select>
         </div>
         <div>
@@ -457,7 +457,7 @@
                         value = windEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * windFrequency * time); // 風音のランダムなノイズ
                         break;
 
-                    case 'realwaterdrop':
+                    case 'waterDrop':
                         const waterDropLength = 0.1; // 短い水滴音の長さ
                         const waterDropEnvelope = Math.max(0, 1 - (time / waterDropLength)); // 急速に減衰
                         value = waterDropEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * frequency * time); // 水滴音のノイズ

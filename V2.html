@@ -137,21 +137,6 @@
             updateSyllableList();
             updateSyllableEditor();
         });
-
-        // 音節のリストを更新する関数
-        function updateSyllableList() {
-            const syllableList = document.getElementById('syllable-list');
-            syllableList.innerHTML = '';
-            syllables.forEach((syllable, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = `音節 ${index + 1}`;
-                syllableList.appendChild(option);
-            });
-            syllableList.addEventListener('change', (e) => {
-                currentSyllableIndex = e.target.value;
-                updateSyllableEditor();
-            });
         }
 
         // 音節の編集フォームを更新する関数

@@ -481,7 +481,7 @@
                         const iceEnvelope = Math.exp(-time * 3); // ゆっくり減衰
                         value = iceEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * iceFrequency * time); // 氷のひび割れ音
                         break;
-                                        case 'wood':
+                    case 'wood':
                         const woodFrequency = 200; // 木材の音に合った中低周波数
                         const woodEnvelope = Math.exp(-time * 1.5); // ゆっくり減衰
                         value = woodEnvelope * (Math.sin(2 * Math.PI * woodFrequency * time) * (Math.random() * 0.4 + 0.6)); // 木材の打撃音

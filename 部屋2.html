@@ -416,7 +416,7 @@
                         const swordLength = 0.2; // 短い音の長さ
                         const swordFrequency = 1000; // 高い周波数で金属音を模倣
                         const swordEnvelope = Math.max(0, 1 - (time / swordLength)); // 短いアタックと急速な減衰
-                        value = swordEnvelope * Math.sin(2 * Math.PI * swordFrequency * time) * (Math.random() * 0.5 + 0.5); // ノイズを加えて金属的な音にする
+                        value = swordEnvelope * Math.sin(2 * Math.PI * frequency * time) * (Math.random() * 0.5 + 0.5); // ノイズを加えて金属的な音にする
                         break;
                     case 'mud':
                         const mudLength = 0.5; // 泥音の長さ
@@ -426,19 +426,19 @@
                     case 'light':
                         const lightFrequency = 2000; // 高周波数
                         const lightEnvelope = Math.sin(2 * Math.PI * time * 0.5); // ゆっくりとした波形変化
-                        value = lightEnvelope * Math.sin(2 * Math.PI * lightFrequency * time) * 0.5; // 明るい音
+                        value = lightEnvelope * Math.sin(2 * Math.PI * frequency * time) * 0.5; // 明るい音
                         break;
                     case 'slime':
                     // 基本的なパラメータ
                         const slimeFrequency = 500; // 低周波数
                         const slimeEnvelope = Math.exp(-time * 5); // 徐々に減衰するエンベロープ
                         const slimeNoise = Math.random() * 0.2 - 0.1; // 軽いノイズ
-                        value = slimeEnvelope * (Math.sin(2 * Math.PI * slimeFrequency * time) + slimeNoise);
+                        value = slimeEnvelope * (Math.sin(2 * Math.PI * frequency * time) + slimeNoise);
                         break;
                     case 'steelDrum':
                         const steelDrumFrequency = frequency * (Math.random() * 0.1 + 0.95); // 少しランダム性を持たせる
                         const steelDrumEnvelope = Math.exp(-time * 3); // ゆっくり減衰する
-                        value = steelDrumEnvelope * (Math.sin(2 * Math.PI * steelDrumFrequency * time) + Math.sin(2 * Math.PI * steelDrumFrequency * 1.5 * time) * 0.5);
+                        value = steelDrumEnvelope * (Math.sin(2 * Math.PI * frequency * time) + Math.sin(2 * Math.PI * steelDrumFrequency * 1.5 * time) * 0.5);
                         break;
                     case 'gunShot':
                         const gunShotLength = 0.1; // 短い銃声の長さ
@@ -448,12 +448,12 @@
                     case 'titanium':
                         const titaniumFrequency = 600; // 高周波の金属音
                         const titaniumEnvelope = Math.exp(-time * 5); // 急激に減衰する
-                        value = titaniumEnvelope * (Math.sin(2 * Math.PI * titaniumFrequency * time) + Math.sin(2 * Math.PI * time * 0.5) * 0.3); // 金属的な共鳴音
+                        value = titaniumEnvelope * (Math.sin(2 * Math.PI * frequency * time) + Math.sin(2 * Math.PI * time * 0.5) * 0.3); // 金属的な共鳴音
                         break;
                     case 'wind':
                         const windFrequency = 200; // 低周波数の風音
                         const windEnvelope = Math.exp(-time * 0.5); // ゆっくり減衰
-                        value = windEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * windFrequency * time); // 風音のランダムなノイズ
+                        value = windEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * frequency * time); // 風音のランダムなノイズ
                         break;
                     case 'realwaterdrop':
                         const waterDropLength = 0.1; // 短い水滴音の長さ
@@ -463,27 +463,27 @@
                     case 'thunder':
                         const thunderFrequency = 50; // 低周波数の雷音
                         const thunderEnvelope = Math.exp(-time * 1); // ゆっくり減衰
-                        value = thunderEnvelope * ((Math.random() * 2 - 1) + Math.sin(2 * Math.PI * thunderFrequency * time) * 0.5); // 雷音のノイズと共鳴
+                        value = thunderEnvelope * ((Math.random() * 2 - 1) + Math.sin(2 * Math.PI * frequency * time) * 0.5); // 雷音のノイズと共鳴
                         break;
                     case 'grass':
                         const grassFrequency = 500; // 高周波数の草音
                         const grassEnvelope = Math.exp(-time * 2); // ゆっくり減衰
-                        value = grassEnvelope * (Math.sin(2 * Math.PI * grassFrequency * time) * Math.random() * 0.2); // 草のささやき音
+                        value = grassEnvelope * (Math.sin(2 * Math.PI * frequency * time) * Math.random() * 0.2); // 草のささやき音
                         break;
                     case 'magma':
                         const magmaFrequency = 80; // 低周波数のマグマ音
                         const magmaEnvelope = Math.exp(-time * 1); // 中程度の減衰
-                        value = magmaEnvelope * (Math.sin(2 * Math.PI * magmaFrequency * time) + Math.random() * 0.5); // マグマのうねり音
+                        value = magmaEnvelope * (Math.sin(2 * Math.PI * frequency * time) + Math.random() * 0.5); // マグマのうねり音
                         break;
                     case 'ice':
                         const iceFrequency = 1000; // 高周波数の氷音
                         const iceEnvelope = Math.exp(-time * 3); // ゆっくり減衰
-                        value = iceEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * iceFrequency * time); // 氷のひび割れ音
+                        value = iceEnvelope * (Math.random() * 2 - 1) * Math.sin(2 * Math.PI * frequency * time); // 氷のひび割れ音
                         break;
                     case 'wood':
                         const woodFrequency = 200; // 木材の音に合った中低周波数
                         const woodEnvelope = Math.exp(-time * 1.5); // ゆっくり減衰
-                        value = woodEnvelope * (Math.sin(2 * Math.PI * woodFrequency * time) * (Math.random() * 0.4 + 0.6)); // 木材の打撃音
+                        value = woodEnvelope * (Math.sin(2 * Math.PI * frequency * time) * (Math.random() * 0.1 + 0.1)); // 木材の打撃音
                         break;            
                     case 'triangleDing':
                         const dingFrequency = 440; // 三角波の基準周波数

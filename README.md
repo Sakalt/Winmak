@@ -62,7 +62,7 @@ https://sakalt.github.io/Winmak/3.html
 
 
 
-
+https://chatgpt.com
 
 
 

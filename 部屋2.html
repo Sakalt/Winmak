@@ -62,9 +62,8 @@
                 <option value="magma">マグマ</option>
                 <option value="ice">氷</option>
                 <option value="wood">木材</option>
-                <option value="thunder2">雷2</option>
                 <option value="triangleDing">三角へこみ</option>
-                <option value="realwaterdrop">水滴2</option>
+                <option value="gunShot2">？</option>
             </select>
         </div>
         <div>
@@ -485,13 +484,7 @@
                         const woodFrequency = 200; // 木材の音に合った中低周波数
                         const woodEnvelope = Math.exp(-time * 1.5); // ゆっくり減衰
                         value = woodEnvelope * (Math.sin(2 * Math.PI * woodFrequency * time) * (Math.random() * 0.4 + 0.6)); // 木材の打撃音
-                        break;                    
-                    case 'thunder2':
-                        // `frequency` が未定義の場合、適切な値を設定してください
-                        const thunder2Frequency = 200; // 例として200Hzを設定
-                        const thunder2Envelope = Math.exp(-time * 2); // ゆっくり減衰
-                        value = thunder2Envelope * (Math.sin(2 * Math.PI * thunder2Frequency * time) + Math.random() * 0.2); // 雷の轟音
-                        break;                    
+                        break;            
                     case 'triangleDing':
                         const dingFrequency = 440; // 三角波の基準周波数
                         const dingDuration = 0.4; // 0.4秒ごとに三角波
@@ -502,10 +495,10 @@
                         const triangleEnvelope = Math.exp(-time * 10); // 急激に減衰
                         value = triangleEnvelope * triangleWave * 0.5; // 三角へこみ音
                         break;                    
-                    case 'realWaterDrop':
-                        const waterDropFrequency = 1500; // 高周波数の水滴音
-                        const waterDropEnvelope = Math.exp(-time * 0.1); // 短い減衰
-                        value = waterDropEnvelope * (Math.sin(2 * Math.PI * waterDropFrequency * time) * (Math.random() * 0.5 + 0.5)); // リアルな水滴音
+                    case 'gunShot2':
+                        const gunShot2Length = 0.16; // 短い銃声の長さ
+                        const gunShotEnvelope2 = Math.sin(0, 1 - (time / gunShotLength)); // 急速に減衰
+                        value = gunShotEnvelope2 * (Math.cos() * 2 - 1); // ランダムなノイズ
                         break;
                 }
 

@@ -500,9 +500,9 @@
                         value = triangleEnvelope * triangleWave * 0.5; // 三角へこみ音
                         break;                    
                     case 'gunShot2':
-                        const gunShot2Length = 0.16; // 短い銃声の長さ
-                        const gunShotEnvelope2 = Math.exp(0.5, 1 - (time / gunShotLength)); // 急速に減衰
-                        value = gunShotEnvelope2 * (Math.abs() * 1.7 - 0.9); // ランダムなノイズ
+                        const gunShot2Length = 0.06; // 短い銃声の長さ
+                        const gunShotEnvelope2 = Math.tan(0.5, 1 - (time / gunShotLength)); // 急速に減衰
+                        value = gunShotEnvelope2 * (Math.exp() * 1.7 - 0.9 * frequency); // ランダムなノイズ
                         break;
                 }
 

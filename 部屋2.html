@@ -64,6 +64,7 @@
                 <option value="wood">木材</option>
                 <option value="triangleDing">三角へこみ</option>
                 <option value="gunShot2">？</option>
+                <option value="tanje">tan</option>
             </select>
         </div>
         <div>
@@ -342,6 +343,9 @@
                     case 'sine':
                         value = Math.sin(2 * Math.PI * frequency * time);
                         break;
+                    case 'tanje':
+                        value = Math.tan(2 * Math.PI * frequency * time);
+                        break;
                     case 'square':
                         value = Math.sign(Math.sin(2 * Math.PI * frequency * time));
                         break;
@@ -497,8 +501,8 @@
                         break;                    
                     case 'gunShot2':
                         const gunShot2Length = 0.16; // 短い銃声の長さ
-                        const gunShotEnvelope2 = Math.sin(0, 1 - (time / gunShotLength)); // 急速に減衰
-                        value = gunShotEnvelope2 * (Math.cos() * 2 - 1); // ランダムなノイズ
+                        const gunShotEnvelope2 = Math.exp(0.5, 1 - (time / gunShotLength)); // 急速に減衰
+                        value = gunShotEnvelope2 * (Math.abs() * 1.7 - 0.9); // ランダムなノイズ
                         break;
                 }
 

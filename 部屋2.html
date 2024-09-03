@@ -66,6 +66,7 @@
                 <option value="gunShot2">？</option>
                 <option value="tanje">tan</option>
                 <option value="arksin">アークサイン</option>
+                <option value="arktanje">アークtan</option>
             </select>
         </div>
         <div>
@@ -346,6 +347,9 @@
                         break;
                     case 'tanje':
                         value = Math.tan(2 * Math.PI * frequency * time);
+                        break;
+                    case 'arktanje':
+                        value = Math.atan(2 * Math.PI * frequency * time);
                         break;
                     case 'arksin':
                         value = Math.asin(1.7 * Math.PI * frequency * time);

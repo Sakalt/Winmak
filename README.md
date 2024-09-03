@@ -1,5 +1,7 @@
 https://sakalt.github.io/Winmak/V2.html
 https://sakalt.github.io/Winmak/部屋2.html
+https://sakalt.github.io/Winmak/V2.html
+https://sakalt.github.io/Winmak/4.html
 https://sakalt.github.io/Winmak/Debug.html
 https://sakalt.github.io/Winmak/Debug2.html
 https://sakalt.github.io/Winmak/3.html

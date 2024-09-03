@@ -64,6 +64,99 @@ https://sakalt.github.io/Winmak/3.html
 
 https://chatgpt.com
 
-
+case 'guitar':
+                    // ギターの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        const time = i / sampleRate;
+                        data[i] = Math.sin(2 * Math.PI * frequency * time) * (0.5 * Math.sin(2 * Math.PI * 5 * time));
+                    }
+                    break;
+                    
+                case 'piano':
+                    // ピアノの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        const time = i / sampleRate;
+                        data[i] = 0.3 * Math.sin(2 * Math.PI * frequency * time) * Math.exp(-5 * time);
+                    }
+                    break;
+                    
+                case 'drum':
+                    // ドラムの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+                    break;
+                    
+                case 'hihat':
+                    // ハイハットの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        const time = i / sampleRate;
+                        data[i] = Math.sin(2 * Math.PI * 5000 * time) * Math.exp(-5 * time);
+                    }
+                    break;
+                    
+                case 'strings':
+                    // ストリングスの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        const time = i / sampleRate;
+                        data[i] = 0.5 * Math.sin(2 * Math.PI * frequency * time) * Math.exp(-2 * time);
+                    }
+                    break;
+                    
+                case 'trumpet':
+                    // トランペットの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        const time = i / sampleRate;
+                        data[i] = 0.4 * Math.sin(2 * Math.PI * frequency * time) * Math.exp(-3 * time);
+                    }
+                    break;
+                    
+                case 'saxophone':
+                    // サックスの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        const time = i / sampleRate;
+                        data[i] = 0.5 * Math.sin(2 * Math.PI * frequency * time) * Math.exp(-2 * time);
+                    }
+                    break;
+                    
+                case 'synth':
+                    // シンセの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        const time = i / sampleRate;
+                        data[i] = Math.sin(2 * Math.PI * frequency * time) * Math.sin(2 * Math.PI * 10 * time);
+                    }
+                    break;
+                    
+                case 'bass':
+                    // ベースの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        const time = i / sampleRate;
+                        data[i] = 0.5 * Math.sin(2 * Math.PI * frequency * time) * Math.exp(-3 * time);
+                    }
+                    break;
+                    
+                case 'clarinet':
+                    // クラリネットの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        const time = i / sampleRate;
+                        data[i] = 0.4 * Math.sin(2 * Math.PI * frequency * time) * Math.exp(-4 * time);
+                    }
+                    break;
+                    
+                case 'flute':
+                    // フルートの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        const time = i / sampleRate;
+                        data[i] = 0.3 * Math.sin(2 * Math.PI * (frequency * 2) * time) * Math.exp(-2 * time);
+                    }
+                    break;
+                    
+                case 'organ':
+                    // オルガンの音を生成する処理
+                    for (let i = 0; i < length; i++) {
+                        const time = i / sampleRate;
+                        data[i] = 0.6 * Math.sin(2 * Math.PI * frequency * time) * Math.sin(2 * Math.PI * 10 * time);
+                    }
+                    break;
 
 

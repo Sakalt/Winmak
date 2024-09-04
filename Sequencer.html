@@ -70,11 +70,10 @@
     <script>
         const grid = document.getElementById('sequencer');
         const cells = [];
-        const sequence = Array(16).fill(Array(8).fill(false));
+        const sequence = Array.from({ length: 16 }, () => Array(8).fill(false));
         let intervalId;
         let recorder;
         let recording = false;
-        let recordedChunks = [];
 
         // 楽器の定義
         const instruments = {

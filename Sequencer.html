@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Advanced Sequencer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .instrument-select {
+            margin-bottom: 10px;
+        }
+        .grid-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(16, 30px);
+            grid-gap: 2px;
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            background-color: #ddd;
+            cursor: pointer;
+        }
+        .active {
+            background-color: #00f;
+        }
+        .note-labels {
+            display: flex;
+            justify-content: space-between;
+        }
+        .note-labels div {
+            width: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="instrument-select">
+        <label for="instrument">楽器を選択:</label>
+        <select id="instrument">
+            <option value="synth">Synth</option>
+            <option value="fm">FM</option>
+            <option value="membrane">Membrane</option>
+            <option value="drum">Drum</option>
+            <option value="pluck">Pluck</option>
+            <option value="amplitude">Amplitude</option>
+            <option value="saw">Saw</option>
+            <option value="noise">Noise</option>
+            <option value="piano">Piano</option>
+            <option value="guitar">Guitar</option>
+            <option value="strings">Strings</option>
+            <option value="organ">Organ</option>
+        </select>
+    </div>
+    <div class="grid-container">
+        <div class="note-labels">
+            <div>C4</div><div>D4</div><div>E4</div><div>F4</div><div>G4</div><div>A4</div><div>B4</div><div>C5</div>
+        </div>
+        <div class="grid" id="sequencer"></div>
+    </div>
+    <button onclick="startSequencer()">再生</button>
+    <button onclick="exportAudio()">エクスポート</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/tone@14"></script>
+    <script src="https://cdn.jsdelivr.net/npm/recorder-js@1.1.0/dist/recorder.min.js"></script>
+    <script>
+        const grid = document.getElementById('sequencer');
+        const cells = [];
+        const sequence = Array(16).fill(Array(8).fill(false));
+        let intervalId;
+        let recorder;
+        let recording = false;
+        let recordedChunks = [];
+
+        // 楽器の定義
+        const instruments = {
+            synth: new Tone.Synth().toDestination(),
+            fm: new Tone.FMSynth().toDestination(),
+            membrane: new Tone.MembraneSynth().toDestination(),
+            drum: new Tone.NoiseSynth().toDestination(),
+            pluck: new Tone.PluckSynth().toDestination(),
+            amplitude: new Tone.AMSynth().toDestination(),
+            saw: new Tone.Synth({ oscillator: { type: 'sawtooth' } }).toDestination(),
+            noise: new Tone.NoiseSynth().toDestination(),
+            piano: new Tone.PolySynth().toDestination(),
+            guitar: new Tone.Sampler({
+                urls: {
+                    C4: 'https://tonejs.github.io/audio/samples/guitar/C4.mp3',
+                    E4: 'https://tonejs.github.io/audio/samples/guitar/E4.mp3',
+                }
+            }).toDestination(),
+            strings: new Tone.PolySynth().toDestination(),
+            organ: new Tone.MonoSynth().toDestination(),
+        };
+
+        // グリッドの作成
+        function createGrid() {
+            for (let i = 0; i < 16; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.addEventListener('click', () => toggleCell(i, j));
+                    grid.appendChild(cell);
+                    cells.push(cell);
+                }
+            }
+        }
+
+        // セルのトグル
+        function toggleCell(x, y) {
+            sequence[x][y] = !sequence[x][y];
+            const index = x * 8 + y;
+            cells[index].classList.toggle('active');
+        }
+
+        // シーケンサーの再生
+        function startSequencer() {
+            if (intervalId) clearInterval(intervalId);
+
+            const instrumentName = document.getElementById('instrument').value;
+            const synth = instruments[instrumentName];
+
+            let step = 0;
+            intervalId = setInterval(() => {
+                for (let i = 0; i < 8; i++) {
+                    if (sequence[step][i]) {
+                        const pitch = (8 - i) * 12; // ピッチ調整
+                        synth.triggerAttackRelease(Tone.Frequency('C4').transpose(pitch), '8n');
+                    }
+                }
+                step = (step + 1) % 16;
+            }, 500);
+        }
+
+        // 音声のエクスポート
+        function exportAudio() {
+            if (recording) {
+                recorder.stop().then(({ blob }) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'sequence.wav';
+                    a.click();
+                });
+                recording = false;
+            } else {
+                Tone.start().then(() => {
+                    const audioContext = Tone.getContext();
+                    recorder = new Recorder(audioContext.createMediaStreamDestination().stream);
+                    recorder.start();
+                    recording = true;
+                });
+            }
+        }
+
+        createGrid();
+        Tone.start();
+    </script>
+</body>
+</html>

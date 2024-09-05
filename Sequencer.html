@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Advanced Sequencer</title>
+    <title>シーケンサー - カスタムグリッドと楽器選択</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        .instrument-select {
+        .instrument-select, .grid-settings {
             margin-bottom: 10px;
         }
         .grid-container {
@@ -16,7 +16,6 @@
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(16, 30px);
             grid-gap: 2px;
         }
         .cell {
@@ -29,18 +28,6 @@
         .active {
             background-color: #00f;
         }
-        .note-labels {
-            display: flex;
-            justify-content: space-between;
-        }
-        .note-labels div {
-            width: 30px;
-            text-align: center;
-        }
-        .instrument-select select {
-            background-color: #f0f0f0;
-        }
-        /* 楽器ごとの色設定 */
         .instrument-colors {
             display: flex;
             flex-wrap: wrap;
@@ -66,44 +53,37 @@
         .guitar { background-color: #99ccff; }
         .strings { background-color: #ffccff; }
         .organ { background-color: #ccff99; }
+        .win7 { background-color: #ccccff; }
+        .win7err { background-color: #ffcccc; }
     </style>
 </head>
 <body>
     <div class="instrument-select">
         <label for="instrument">楽器を選択:</label>
         <select id="instrument">
-            <option value="synth">Synth</option>
-            <option value="fm">FM</option>
-            <option value="membrane">Membrane</option>
-            <option value="drum">Drum</option>
-            <option value="pluck">Pluck</option>
-            <option value="amplitude">Amplitude</option>
-            <option value="saw">Saw</option>
-            <option value="noise">Noise</option>
-            <option value="piano">Piano</option>
-            <option value="guitar">Guitar</option>
-            <option value="strings">Strings</option>
-            <option value="organ">Organ</option>
+            <option value="custom">カスタム波形</option>
+            <option value="synth">シンセサイザー</option>
+            <option value="fm">FMシンセサイザー</option>
+            <option value="membrane">メンブレン</option>
+            <option value="drum">ドラム</option>
+            <option value="pluck">プラック</option>
+            <option value="amplitude">AMシンセサイザー</option>
+            <option value="saw">ソウ波</option>
+            <option value="noise">ノイズ</option>
+            <option value="piano">ピアノ</option>
+            <option value="guitar">ギター</option>
+            <option value="strings">ストリングス</option>
+            <option value="organ">オルガン</option>
+            <option value="win7">Win7 サウンド</option>
+            <option value="win7err">Win7 エラーメッセージ</option>
         </select>
     </div>
-    <div class="instrument-colors">
-        <div class="synth"></div>
-        <div class="fm"></div>
-        <div class="membrane"></div>
-        <div class="drum"></div>
-        <div class="pluck"></div>
-        <div class="amplitude"></div>
-        <div class="saw"></div>
-        <div class="noise"></div>
-        <div class="piano"></div>
-        <div class="guitar"></div>
-        <div class="strings"></div>
-        <div class="organ"></div>
+    <div class="grid-settings">
+        <label for="gridSize">グリッドサイズ (行*列):</label>
+        <input type="text" id="gridSize" value="8*16">
+        <button onclick="createGrid()">グリッドを設定</button>
     </div>
     <div class="grid-container">
-        <div class="note-labels">
-            <div>C4</div><div>D4</div><div>E4</div><div>F4</div><div>G4</div><div>A4</div><div>B4</div><div>C5</div>
-        </div>
         <div class="grid" id="sequencer"></div>
     </div>
     <button onclick="startSequencer()">再生</button>
@@ -113,12 +93,15 @@
     <script src="https://cdn.jsdelivr.net/npm/recorder-js@1.1.0/dist/recorder.min.js"></script>
     <script>
         const grid = document.getElementById('sequencer');
-        const cells = [];
-        const sequence = Array.from({ length: 16 }, () => Array(8).fill(false));
+        let cells = [];
+        let sequence = [];
+        let numRows = 8;
+        let numCols = 16;
         let intervalId;
         let recorder;
         let recording = false;
         let currentColor = '#ddd';  // デフォルトの背景色
+        let waveform = new Float32Array(512);  // 初期波形データ
 
         // 楽器の定義
         const instruments = {
@@ -133,18 +116,33 @@
             piano: new Tone.PolySynth().toDestination(),
             guitar: new Tone.Sampler({
                 urls: {
-                    C4: 'https://tonejs.github.io/audio/samples/guitar/C4.mp3',
-                    E4: 'https://tonejs.github.io/audio/samples/guitar/E4.mp3',
+                    C4: 'https://example.com/win7.mp3',
+                    E4: 'https://example.com/win7err.mp3',
                 }
             }).toDestination(),
             strings: new Tone.PolySynth().toDestination(),
             organ: new Tone.MonoSynth().toDestination(),
+            win7: new Tone.Player("https://sakalt.github.io/win8/src/C:/Windows/system/sounds/error.mp3").toDestination(),
+            win7err: new Tone.Player("https://sakalt.github.io/win8/src/C:/Windows/system/sounds/startup.mp3").toDestination(),
+            custom: null // カスタム波形用
         };
 
         // グリッドの作成
         function createGrid() {
-            for (let i = 0; i < 16; i++) {
-                for (let j = 0; j < 8; j++) {
+            // 現在のグリッドをクリア
+            grid.innerHTML = '';
+            cells = [];
+            sequence = [];
+
+            const sizeInput = document.getElementById('gridSize').value.split('*');
+            numRows = parseInt(sizeInput[0]);
+            numCols = parseInt(sizeInput[1]);
+            
+            grid.style.gridTemplateColumns = `repeat(${numCols}, 30px)`;
+
+            for (let i = 0; i < numCols; i++) {
+                sequence[i] = [];
+                for (let j = 0; j < numRows; j++) {
                     const cell = document.createElement('div');
                     cell.classList.add('cell');
                     cell.dataset.x = i;
@@ -152,6 +150,7 @@
                     cell.addEventListener('click', () => toggleCell(i, j));
                     grid.appendChild(cell);
                     cells.push(cell);
+                    sequence[i][j] = false;
                 }
             }
         }
@@ -159,7 +158,7 @@
         // セルのトグル
         function toggleCell(x, y) {
             sequence[x][y] = !sequence[x][y];
-            const index = x * 8 + y;
+            const index = x * numRows + y;
             cells[index].classList.toggle('active');
             cells[index].style.backgroundColor = sequence[x][y] ? currentColor : '#ddd';
         }
@@ -180,6 +179,11 @@
                 case 'guitar': currentColor = '#99ccff'; break;
                 case 'strings': currentColor = '#ffccff'; break;
                 case 'organ': currentColor = '#ccff99'; break;
+                case 'win7': currentColor = '#ccccff'; break;
+                case 'win7err': currentColor = '#ffcccc'; break;
+                case 'custom':
+                    currentColor = '#ff0000'; // カスタム波形用の色
+                    break;
                 default: currentColor = '#ddd'; break;
             }
         }
@@ -189,17 +193,28 @@
             if (intervalId) clearInterval(intervalId);
 
             setInstrumentColor();
-            const synth = instruments[document.getElementById('instrument').value];
+            const instrumentName = document.getElementById('instrument').value;
+            let synth = instruments[instrumentName];
 
             let step = 0;
             intervalId = setInterval(() => {
-                for (let i = 0; i < 8; i++) {
+                for (let i = 0; i < numRows; i++) {
                     if (sequence[step][i]) {
-                        const pitch = 12 * (8 - i); // ピッチ調整
-                        synth.triggerAttackRelease(Tone.Frequency('C4').transpose(pitch), '8n');
+                        const pitch = 12 * (numRows - i - 1); // ピッチ調整: グリッドの高さに基づく
+                        if (instrumentName === 'custom') {
+                            // カスタム波形オシレーターの作成
+                            const customOscillator = new Tone.Oscillator({
+                                type: 'custom',
+                                partials: waveform
+                            }).toDestination();
+                            customOscillator.frequency.value = Tone.Frequency('C4').transpose(pitch);
+                            customOscillator.start().stop('+0.5');
+                        } else {
+                            synth.triggerAttackRelease(Tone.Frequency('C4').transpose(pitch), '8n');
+                        }
                     }
                 }
-                step = (step + 1) % 16;
+                step = (step + 1) % numCols;
             }, 500);
         }
 

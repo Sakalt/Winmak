@@ -24,6 +24,7 @@
             height: 30px;
             background-color: #ddd;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
         .active {
             background-color: #00f;
@@ -117,6 +118,7 @@
         let intervalId;
         let recorder;
         let recording = false;
+        let currentColor = '#ddd';  // デフォルトの背景色
 
         // 楽器の定義
         const instruments = {
@@ -145,6 +147,8 @@
                 for (let j = 0; j < 8; j++) {
                     const cell = document.createElement('div');
                     cell.classList.add('cell');
+                    cell.dataset.x = i;
+                    cell.dataset.y = j;
                     cell.addEventListener('click', () => toggleCell(i, j));
                     grid.appendChild(cell);
                     cells.push(cell);
@@ -157,14 +161,35 @@
             sequence[x][y] = !sequence[x][y];
             const index = x * 8 + y;
             cells[index].classList.toggle('active');
+            cells[index].style.backgroundColor = sequence[x][y] ? currentColor : '#ddd';
+        }
+
+        // 楽器の色を設定する関数
+        function setInstrumentColor() {
+            const instrumentName = document.getElementById('instrument').value;
+            switch (instrumentName) {
+                case 'synth': currentColor = '#ff9999'; break;
+                case 'fm': currentColor = '#99ff99'; break;
+                case 'membrane': currentColor = '#9999ff'; break;
+                case 'drum': currentColor = '#ffff99'; break;
+                case 'pluck': currentColor = '#ffcc99'; break;
+                case 'amplitude': currentColor = '#ff66cc'; break;
+                case 'saw': currentColor = '#66ff66'; break;
+                case 'noise': currentColor = '#ccffff'; break;
+                case 'piano': currentColor = '#ff9966'; break;
+                case 'guitar': currentColor = '#99ccff'; break;
+                case 'strings': currentColor = '#ffccff'; break;
+                case 'organ': currentColor = '#ccff99'; break;
+                default: currentColor = '#ddd'; break;
+            }
         }
 
         // シーケンサーの再生
         function startSequencer() {
             if (intervalId) clearInterval(intervalId);
 
-            const instrumentName = document.getElementById('instrument').value;
-            const synth = instruments[instrumentName];
+            setInstrumentColor();
+            const synth = instruments[document.getElementById('instrument').value];
 
             let step = 0;
             intervalId = setInterval(() => {
@@ -198,6 +223,8 @@
                 });
             }
         }
+
+        document.getElementById('instrument').addEventListener('change', setInstrumentColor);
 
         createGrid();
         Tone.start();

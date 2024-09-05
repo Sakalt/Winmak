@@ -86,7 +86,7 @@
     <div class="grid-container">
         <div class="grid" id="sequencer"></div>
     </div>
-    <button onclick="startSequencer()">再生</button>
+    <button onclick="toggleSequencer()">再生/停止</button>
     <button onclick="exportAudio()">エクスポート</button>
 
     <script src="https://cdn.jsdelivr.net/npm/tone@14"></script>
@@ -97,7 +97,7 @@
         let sequence = [];
         let numRows = 8;
         let numCols = 16;
-        let intervalId;
+        let isPlaying = false;
         let recorder;
         let recording = false;
         let currentColor = '#ddd';  // デフォルトの背景色
@@ -129,7 +129,6 @@
 
         // グリッドの作成
         function createGrid() {
-            // 現在のグリッドをクリア
             grid.innerHTML = '';
             cells = [];
             sequence = [];
@@ -188,21 +187,33 @@
             }
         }
 
+        // シーケンサーの再生/停止
+        function toggleSequencer() {
+            if (isPlaying) {
+                Tone.Transport.stop();
+                isPlaying = false;
+            } else {
+                Tone.Transport.start();
+                isPlaying = true;
+                startSequencer();
+            }
+        }
+
         // シーケンサーの再生
         function startSequencer() {
-            if (intervalId) clearInterval(intervalId);
-
             setInstrumentColor();
             const instrumentName = document.getElementById('instrument').value;
             let synth = instruments[instrumentName];
 
+            Tone.Transport.cancel();
             let step = 0;
-            intervalId = setInterval(() => {
+            Tone.Transport.bpm.value = 120; // BPM設定
+
+            Tone.Transport.scheduleRepeat(time => {
                 for (let i = 0; i < numRows; i++) {
                     if (sequence[step][i]) {
-                        const pitch = 12 * (numRows - i - 1); // ピッチ調整: グリッドの高さに基づく
+                        const pitch = 12 * (numRows - i - 1);
                         if (instrumentName === 'custom') {
-                            // カスタム波形オシレーターの作成
                             const customOscillator = new Tone.Oscillator({
                                 type: 'custom',
                                 partials: waveform
@@ -215,7 +226,7 @@
                     }
                 }
                 step = (step + 1) % numCols;
-            }, 500);
+            }, '16n');
         }
 
         // 音声のエクスポート

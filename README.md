@@ -6,6 +6,7 @@ https://sakalt.github.io/Winmak/Debug.html
 https://sakalt.github.io/Winmak/Debug2.html
 https://sakalt.github.io/Winmak/Sequencer.html
 https://sakalt.github.io/Winmak/3.html
+https://sakalt.github.io/win8/src/C:/Windows/system/sounds/startup.mp3
 [effect](https://sakalt.github.io/Winmak/effect.html)
 目安
 正弦波 

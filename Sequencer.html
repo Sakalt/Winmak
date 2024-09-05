@@ -36,6 +36,35 @@
             width: 30px;
             text-align: center;
         }
+        .instrument-select select {
+            background-color: #f0f0f0;
+        }
+        /* 楽器ごとの色設定 */
+        .instrument-colors {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .instrument-colors div {
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+            border-radius: 50%;
+            border: 2px solid #000;
+            cursor: pointer;
+        }
+        .synth { background-color: #ff9999; }
+        .fm { background-color: #99ff99; }
+        .membrane { background-color: #9999ff; }
+        .drum { background-color: #ffff99; }
+        .pluck { background-color: #ffcc99; }
+        .amplitude { background-color: #ff66cc; }
+        .saw { background-color: #66ff66; }
+        .noise { background-color: #ccffff; }
+        .piano { background-color: #ff9966; }
+        .guitar { background-color: #99ccff; }
+        .strings { background-color: #ffccff; }
+        .organ { background-color: #ccff99; }
     </style>
 </head>
 <body>
@@ -55,6 +84,20 @@
             <option value="strings">Strings</option>
             <option value="organ">Organ</option>
         </select>
+    </div>
+    <div class="instrument-colors">
+        <div class="synth"></div>
+        <div class="fm"></div>
+        <div class="membrane"></div>
+        <div class="drum"></div>
+        <div class="pluck"></div>
+        <div class="amplitude"></div>
+        <div class="saw"></div>
+        <div class="noise"></div>
+        <div class="piano"></div>
+        <div class="guitar"></div>
+        <div class="strings"></div>
+        <div class="organ"></div>
     </div>
     <div class="grid-container">
         <div class="note-labels">
@@ -127,7 +170,7 @@
             intervalId = setInterval(() => {
                 for (let i = 0; i < 8; i++) {
                     if (sequence[step][i]) {
-                        const pitch = (8 - i) * 12; // ピッチ調整
+                        const pitch = 12 * (8 - i); // ピッチ調整
                         synth.triggerAttackRelease(Tone.Frequency('C4').transpose(pitch), '8n');
                     }
                 }

@@ -53,8 +53,8 @@
         .guitar { background-color: #99ccff; }
         .strings { background-color: #ffccff; }
         .organ { background-color: #ccff99; }
-        .win7 { background-color: #ccccff; }
-        .win7err { background-color: #ffcccc; }
+        .musicbox { background-color: #ccccff; }
+        .koto { background-color: #ffcccc; }
     </style>
 </head>
 <body>
@@ -74,8 +74,8 @@
             <option value="guitar">ギター</option>
             <option value="strings">ストリングス</option>
             <option value="organ">オルガン</option>
-            <option value="win7">Win7 サウンド</option>
-            <option value="win7err">Win7 エラーメッセージ</option>
+            <option value="musicbox">ミュージックボックス</option>
+            <option value="koto">琴</option>
         </select>
     </div>
     <div class="grid-settings">
@@ -122,8 +122,18 @@
             }).toDestination(),
             strings: new Tone.PolySynth().toDestination(),
             organ: new Tone.MonoSynth().toDestination(),
-            win7: new Tone.Player("https://github.com/Sakalt/win8/raw/master/src/C:/Windows/system/sounds/error.mp3").toDestination(),
-            win7err: new Tone.Player("https://sakalt.github.io/win8/src/C:/Windows/system/sounds/startup.mp3").toDestination(),
+            musicbox: new Tone.Sampler({
+                urls: {
+                    C4: 'https://tonejs.github.io/audio/samples/musicbox/C4.mp3',
+                    E4: 'https://tonejs.github.io/audio/samples/musicbox/E4.mp3',
+                }
+            }).toDestination(),
+            koto: new Tone.Sampler({
+                urls: {
+                    C4: 'https://tonejs.github.io/audio/samples/koto/C4.mp3',
+                    E4: 'https://tonejs.github.io/audio/samples/koto/E4.mp3',
+                }
+            }).toDestination(),
             custom: null // カスタム波形用
         };
 
@@ -178,8 +188,8 @@
                 case 'guitar': currentColor = '#99ccff'; break;
                 case 'strings': currentColor = '#ffccff'; break;
                 case 'organ': currentColor = '#ccff99'; break;
-                case 'win7': currentColor = '#ccccff'; break;
-                case 'win7err': currentColor = '#ffcccc'; break;
+                case 'musicbox': currentColor = '#ccccff'; break;
+                case 'koto': currentColor = '#ffcccc'; break;
                 case 'custom':
                     currentColor = '#ff0000'; // カスタム波形用の色
                     break;
@@ -212,7 +222,7 @@
             Tone.Transport.scheduleRepeat(time => {
                 for (let i = 0; i < numRows; i++) {
                     if (sequence[step][i]) {
-                        const pitch = 12 * (numRows - i - 1);
+                        const pitch = 12 * i;  // 高音から低音に変更
                         if (instrumentName === 'custom') {
                             const customOscillator = new Tone.Oscillator({
                                 type: 'custom',

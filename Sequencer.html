@@ -222,7 +222,7 @@
             Tone.Transport.scheduleRepeat(time => {
                 for (let i = 0; i < numRows; i++) {
                     if (sequence[step][i]) {
-                        const pitch = 12 * i;  // 高音から低音に変更
+                        const pitch = i * 6;  // 高音から低音に変更
                         if (instrumentName === 'custom') {
                             const customOscillator = new Tone.Oscillator({
                                 type: 'custom',

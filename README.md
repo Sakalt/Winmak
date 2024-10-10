@@ -6,6 +6,7 @@ https://sakalt.github.io/Winmak/Debug.html
 https://sakalt.github.io/Winmak/Debug2.html
 https://sakalt.github.io/Winmak/Sequencer.html
 https://sakalt.github.io/Winmak/3.html
+https://sakalt.github.io/Winmak/maker.html
 View raw https://github.com/Sakalt/win8/raw/master/src/C:/Windows/system/sounds/error.mp3
 https://suno.com/song/1db9891e-a494-4fd0-8174-bf90a6fd2aed
 [effect](https://sakalt.github.io/Winmak/effect.html)

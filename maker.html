@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>カスタムシーケンサー - 効果音</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .instrument-select, .grid-settings {
+            margin-bottom: 10px;
+        }
+        .grid-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .grid {
+            display: grid;
+            grid-gap: 2px;
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            background-color: #ddd;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .active {
+            background-color: #00f;
+        }
+    </style>
+</head>
+<body>
+    <div class="instrument-select">
+        <label for="instrument">音を選択:</label>
+        <select id="instrument">
+            <option value="monsterRoar">モンスターの鳴き声</option>
+            <option value="blockBreak">ブロック破壊音</option>
+            <option value="triangle8bit">8bit三角波</option>
+            <option value="synth">シンセサイザー</option>
+            <option value="fm">FMシンセサイザー</option>
+            <option value="pluck">プラックシンセ</option>
+            <option value="piano">ピアノ</option>
+            <option value="drum">ドラム</option>
+            <option value="noise">ノイズ</option>
+        </select>
+    </div>
+    <div class="grid-settings">
+        <label for="gridSize">グリッドサイズ (行*列):</label>
+        <input type="text" id="gridSize" value="8*16">
+        <button onclick="createGrid()">グリッドを設定</button>
+    </div>
+    <div class="grid-container">
+        <div class="grid" id="sequencer"></div>
+    </div>
+    <button onclick="toggleSequencer()">再生/停止</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/tone@14"></script>
+    <script>
+        const grid = document.getElementById('sequencer');
+        let cells = [];
+        let sequence = [];
+        let numRows = 8;
+        let numCols = 16;
+        let isPlaying = false;
+        let currentColor = '#ddd';  // デフォルトの背景色
+
+        // カスタム効果音の定義
+        const instruments = {
+            // モンスターの鳴き声
+            monsterRoar: new Tone.Synth({
+                oscillator: {
+                    type: 'custom',
+                    partials: [1, 0.6, 0.4]  // モンスターの鳴き声に近い音
+                }
+            }).toDestination(),
+
+            // ブロック破壊音
+            blockBreak: new Tone.Synth({
+                oscillator: {
+                    type: 'custom',
+                    partials: [1, 0.8, 0.3, 0.1]  // ブロックの破壊音に近い音
+                }
+            }).toDestination(),
+
+            // 8bit 三角波
+            triangle8bit: new Tone.Synth({
+                oscillator: {
+                    type: 'triangle'
+                }
+            }).toDestination(),
+
+            // シンセサイザー
+            synth: new Tone.Synth().toDestination(),
+
+            // FMシンセサイザー
+            fm: new Tone.FMSynth().toDestination(),
+
+            // プラックシンセ
+            pluck: new Tone.PluckSynth().toDestination(),
+
+            // ピアノ
+            piano: new Tone.PolySynth().toDestination(),
+
+            // ドラム（ノイズシンセ）
+            drum: new Tone.NoiseSynth().toDestination(),
+
+            // ノイズ
+            noise: new Tone.NoiseSynth().toDestination(),
+        };
+
+        // グリッドの作成
+        function createGrid() {
+            grid.innerHTML = '';
+            cells = [];
+            sequence = [];
+
+            const sizeInput = document.getElementById('gridSize').value.split('*');
+            numRows = parseInt(sizeInput[0]);
+            numCols = parseInt(sizeInput[1]);
+            
+            grid.style.gridTemplateColumns = `repeat(${numCols}, 30px)`;
+
+            for (let i = 0; i < numCols; i++) {
+                sequence[i] = [];
+                for (let j = 0; j < numRows; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.x = i;
+                    cell.dataset.y = j;
+                    cell.addEventListener('click', () => toggleCell(i, j));
+                    grid.appendChild(cell);
+                    cells.push(cell);
+                    sequence[i][j] = false;
+                }
+            }
+        }
+
+        // セルのトグル
+        function toggleCell(x, y) {
+            sequence[x][y] = !sequence[x][y];
+            const index = x * numRows + y;
+            cells[index].classList.toggle('active');
+            cells[index].style.backgroundColor = sequence[x][y] ? currentColor : '#ddd';
+        }
+
+        // 楽器の色を設定する関数
+        function setInstrumentColor() {
+            const instrumentName = document.getElementById('instrument').value;
+            switch (instrumentName) {
+                case 'monsterRoar': currentColor = '#ff6666'; break;
+                case 'blockBreak': currentColor = '#6666ff'; break;
+                case 'triangle8bit': currentColor = '#ffcc66'; break;
+                case 'synth': currentColor = '#66ff66'; break;
+                case 'fm': currentColor = '#66ccff'; break;
+                case 'pluck': currentColor = '#ff99cc'; break;
+                case 'piano': currentColor = '#ffcc99'; break;
+                case 'drum': currentColor = '#ccff99'; break;
+                case 'noise': currentColor = '#ccccff'; break;
+                default: currentColor = '#ddd'; break;
+            }
+        }
+
+        // シーケンサーの再生/停止
+        function toggleSequencer() {
+            if (isPlaying) {
+                Tone.Transport.stop();
+                isPlaying = false;
+            } else {
+                Tone.Transport.start();
+                isPlaying = true;
+                startSequencer();
+            }
+        }
+
+        // シーケンサーの再生
+        function startSequencer() {
+            setInstrumentColor();
+            const instrumentName = document.getElementById('instrument').value;
+            const instrument = instruments[instrumentName];
+
+            let step = 0;
+            Tone.Transport.cancel(); // 以前のシーケンスをキャンセル
+            Tone.Transport.scheduleRepeat(time => {
+                for (let i = 0; i < numRows; i++) {
+                    if (sequence[step][i]) {
+                        const pitch = Tone.Frequency('C4').transpose(i * 5); // 行によって音程を変化
+                        instrument.triggerAttackRelease(pitch, '8n', time);
+                    }
+                }
+                step = (step + 1) % numCols;
+            }, '8n');
+        }
+
+        document.getElementById('instrument').addEventListener('change', setInstrumentColor);
+
+        createGrid();
+    </script>
+</body>
+</html>
